@@ -1,0 +1,78 @@
+{
+  "frozen_at": "2026-07-07T10:51:58.602551+00:00",
+  "content_sha256": "fa074721bb2bda35d51e8bb89162492676bf171be39dde53e76cf07572b3876a",
+  "content": {
+    "benchmark": "sealeval public benchmark run1 -- honest evaluation of AI code reviewers",
+    "clean_repo": {
+      "url": "https://github.com/psf/requests",
+      "commit": "4c800e9aea2059660b8306b0fc8f9e9a4232cb3e",
+      "subdir": "src/requests"
+    },
+    "mutation_config": {
+      "per_file": 3,
+      "seed": 20260707,
+      "per_archetype_cap": 10,
+      "archetypes": [
+        "inverted_condition",
+        "null_deref",
+        "off_by_one",
+        "swallowed_exception",
+        "wrong_operator"
+      ],
+      "total": 24
+    },
+    "corpus_manifest_sha256": {
+      "__init__.py": "4b82c3a0f658ff27038e8427ad41114ec05c43fc14f58d80f862f14d0d9ac22d",
+      "__version__.py": "138a8ee2cb71898d5195c6937daa4e9045daff7e69949e1f68ed839fb777c39b",
+      "_internal_utils.py": "354d41c919c7466c3b20164aa2bb784e9abd6bda4fb96de8b4f633f8481027ef",
+      "_types.py": "05a4b90a7f2d3188e36e3257f7c597a138339accce5d0dc6b2e5f96e6944e99e",
+      "adapters.py": "be1d44dd11f2b5d09e8647a27c7e93d60a1274a80635ec9e2a5b2d4e0eee7a82",
+      "api.py": "83e10c654350801e8e993aef6dfe99a78f522947f6ff4fa7d3840b15f07606d3",
+      "auth.py": "3c6e32544b7d82a27abd922125476ccd9bbfca0bf402deb5b4233e3c85d150f0",
+      "certs.py": "5200c997cec403786b1045457c262f1b259270e0fe936b2bac9ba0f5efa84d2e",
+      "compat.py": "5531afdebf8adc6e0e44df49f3e810ee035869a4660c4046a57e7775776aa4a6",
+      "cookies.py": "8711dbcc259960f6404553b57579854e33dadf5acf8b68543beeb6b63b7b76a0",
+      "exceptions.py": "42eb05cba71127653745be936e895dd44cb618c7a4db7a1f73e55e82618ded9d",
+      "help.py": "e95942776a0d96d8462f129aa6ea4993461746eb3602f0b8177aae667787fba0",
+      "hooks.py": "aa947312c1c17982362bcbdf8bf1adcbe821ecee0cfb47481e1e94129c2ff406",
+      "models.py": "cda71e4eb5ed6f6bbc4a04e58353ee111d650bfb47846bd0d852843e63be3d03",
+      "packages.py": "b745f5941ad2e2dcd9d44b5f09841c87a7353ab669ba82443f70b480f178082d",
+      "sessions.py": "fdbe0aecba6f5d6248b1c30c4fc7b97e2f19c2dbdc14266ca40021cc17766532",
+      "status_codes.py": "0be31cc0aae380a20c5e3ae5a9061da62a7d587abb830e11c6476ee501f11741",
+      "structures.py": "1b6f0da6860e46aad37068e82aa38c6d1dafc148d434be06802d6df20a775975",
+      "utils.py": "f7f1eaf29592eabb78464c4491cf97e7642dfea29e98e242efc2098d383a73bd"
+    },
+    "injection_seal": {
+      "algo": "sha256",
+      "salt": "cb6d3741662673667dbf0227751c25bf",
+      "seal": "82402bb460e6bbc24406ed63b0c27a803dd4ca4dfeb273141daaa4f74432df23",
+      "n": 24
+    },
+    "systems": [
+      {
+        "id": "claude",
+        "desc": "Claude Sonnet via claude CLI (stream-json), fresh process per file"
+      },
+      {
+        "id": "codex",
+        "desc": "OpenAI Codex CLI (codex exec --json), fresh process per file"
+      },
+      {
+        "id": "gemini",
+        "desc": "Gemini via Antigravity CLI (agy --print), fresh process per file"
+      }
+    ],
+    "system_prompt_sha256": "e8bc8ea285e836baeb0e9da8b4fb21bb0ffd7683d7eb088d05a8f900a6eeaf7e",
+    "metrics": {
+      "TP": "judge verdict GENUINE_BUG AND claim matches a sealed injection (same file, |line-line_key| <= 1)",
+      "precision": "TP / all claims (hallucinated/out-of-scope files count against precision)",
+      "recall": "distinct injections matched by a TP / total injections",
+      "judge": "refute-by-default blind judge (sealeval.judge), model Claude Sonnet, fresh process per claim, transcripts published"
+    },
+    "hypotheses": {
+      "H1": "no system exceeds 0.5 recall at >=0.5 precision on single-line AST mutations (they are subtle-ish in real code)",
+      "note": "H1 is a PRIOR, not a threshold to game; whatever the numbers are, they get published"
+    },
+    "line_tolerance": 1
+  }
+}
