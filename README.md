@@ -32,6 +32,28 @@ The judge primitive needs *your* LLM call (`judge_fn`) so it can't run offline �
 that make a verdict defensible (the sealed key can't move; the goalposts can't move) are pure stdlib
 and prove themselves above with no model at all.
 
+## A public run you can audit — `benchmark/run1`
+
+Not a toy: three real code reviewers (Claude Sonnet, OpenAI Codex, Gemini) swept a 24-injection
+corpus over [`psf/requests`](https://github.com/psf/requests), scored by this library. The
+integrity is checkable straight from `git log` — the commit sealing the key
+(`sha256`, n=24) **precedes** the commit adding any findings, which **precedes** the reveal:
+
+| system | precision | recall | |
+|---|---|---|---|
+| codex | 0.62 | **0.75** | falsified the pre-registered prior |
+| gemini | 0.77 | 0.42 † | |
+| claude | 0.47 | 0.33 | |
+
+The pre-registered prior H1 (*"no system exceeds 0.5 recall at ≥0.5 precision"*, written into
+`prereg.lock.json` before the run) was **falsified** by codex — published either way, which is the
+whole point. Every judge reply is in `benchmark/run1/transcripts/`; the metric is a *floor* (a
+genuine bug not in our injected key counts against precision). † gemini reviewed 15/19 files — the
+4 largest hit a transport (`agy --print`) argv limit; disclosed in full rather than papered over,
+with a common-subset diagnostic to isolate it. See
+[`benchmark/run1/RESULTS.md`](benchmark/run1/RESULTS.md) and
+[`PROTOCOL.md`](benchmark/run1/PROTOCOL.md).
+
 ## Install
 
 ```bash
