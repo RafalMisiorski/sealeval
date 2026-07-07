@@ -6,5 +6,6 @@ __pycache__/
 venv/
 build/
 dist/
-*.sealed
+# NOTE: benchmark/ seals are committed DELIBERATELY (the public pre-registration commitment).
+# Keep private/local run dirs out via .secret/ instead of a blanket *.sealed.
 .secret/
