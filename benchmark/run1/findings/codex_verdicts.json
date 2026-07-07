@@ -1,0 +1,243 @@
+{
+  "judge_model": "sonnet",
+  "claims_judged": 29,
+  "genuine_bug": 25,
+  "real_not_bug": 3,
+  "refuted": 1,
+  "errored": 0,
+  "precision_genuine_bug": 0.862,
+  "verdicts": [
+    {
+      "claim_id": "c1",
+      "verdict": "GENUINE_BUG",
+      "confidence": 0.97,
+      "mechanism": "Line 86 `elif not (charset_normalizer_version):` triggers when the version is None/falsy, causing `None.split(\".\")` at line 87 to raise AttributeError instead of hitting the warning branch, while a real version string falls through to the unconditional `else` warning at line 91-96 without validation.",
+      "file": "__init__.py",
+      "error": null
+    },
+    {
+      "claim_id": "c2",
+      "verdict": "GENUINE_BUG",
+      "confidence": 0.95,
+      "mechanism": "Line 31's condition is inverted vs. the intended logic: bytes input (not builtin_str) skips decode() and returns raw bytes at line 32, while str input (is builtin_str) hits `string.decode(encoding)` at line 34 which raises AttributeError since str has no decode() in Python 3.",
+      "file": "_internal_utils.py",
+      "error": null
+    },
+    {
+      "claim_id": "c3",
+      "verdict": "GENUINE_BUG",
+      "confidence": 0.95,
+      "mechanism": "The condition is inverted: when `string` is a native `str` (builtin_str), execution falls into the `else` branch and calls `string.decode(encoding)`, but `str` has no `.decode` method in Python 3, raising AttributeError; the bytes case incorrectly returns undecoded bytes instead.",
+      "file": "_internal_utils.py",
+      "error": null
+    },
+    {
+      "claim_id": "c4",
+      "verdict": "REAL_NOT_BUG",
+      "confidence": 0.6,
+      "mechanism": "The `or hasattr(obj, \"read\")` fallback at line 34 is an intentional duck-typing broadening (per the docstring's explicit goal of supporting `__getattr__`-based proxies) and only affects TypeIs narrowing for type-checkers, not runtime call safety \u2014 any failure would occur at the actual `obj.read()` call site regardless of this check, and a non-callable `read` attribute is an unlikely edge case, not",
+      "file": "_types.py",
+      "error": null
+    },
+    {
+      "claim_id": "c5",
+      "verdict": "GENUINE_BUG",
+      "confidence": 0.9,
+      "mechanism": "Type checkers special-case TYPE_CHECKING as True, so `if not (TYPE_CHECKING):` on line 55 is treated as `if False:` and skipped entirely, making the imports (PreparedRequest, Response, TypeIs, etc.) and the `_ValidatedRequest` class invisible to static analysis while `is_prepared` at line 47 still annotates with `PreparedRequest`/`TypeIs[_ValidatedRequest]` outside that block.",
+      "file": "_types.py",
+      "error": null
+    },
+    {
+      "claim_id": "c6",
+      "verdict": "GENUINE_BUG",
+      "confidence": 0.97,
+      "mechanism": "Line 710-711 swallows ProtocolError/OSError with a bare `pass` instead of raising ConnectionError, so control falls through to `return self.build_response(request, resp)` at line 748 with `resp` unbound, raising UnboundLocalError instead of the intended connection error.",
+      "file": "adapters.py",
+      "error": null
+    },
+    {
+      "claim_id": "c7",
+      "verdict": "GENUINE_BUG",
+      "confidence": 0.95,
+      "mechanism": "Line 738's `if not (isinstance(e, _SSLError))` inverts the intended check (upstream requests code uses `if isinstance(e, _SSLError)`), so a real `_SSLError` skips to the `else: raise` (unwrapped) while a plain `ReadTimeoutError`/`_InvalidHeader` (caught via `_HTTPError`, not an `_SSLError` instance) satisfies `not isinstance(...)` and is wrongly wrapped as `SSLError`.",
+      "file": "adapters.py",
+      "error": null
+    },
+    {
+      "claim_id": "c8",
+      "verdict": "GENUINE_BUG",
+      "confidence": 0.85,
+      "mechanism": "Line 18 uses `if not (TYPE_CHECKING):`, which type checkers (mypy/pyright specially evaluate TYPE_CHECKING as True) treat as unreachable, so the `Unpack` and `_t` imports never occur during static analysis, leaving every `_t.UriType`/`Unpack[_t.*Kwargs]` annotation in the file unresolved by type checkers even though it works fine at runtime.",
+      "file": "api.py",
+      "error": null
+    },
+    {
+      "claim_id": "c9",
+      "verdict": "GENUINE_BUG",
+      "confidence": 0.9,
+      "mechanism": "line 291 uses `r.headers.get(\"www-authenticate\")` with no default, so for any 4xx response lacking that header (e.g. a plain 403/404/429) s_auth is None and line 293's `s_auth.lower()` raises AttributeError instead of returning r.",
+      "file": "auth.py",
+      "error": null
+    },
+    {
+      "claim_id": "c10",
+      "verdict": "GENUINE_BUG",
+      "confidence": 0.97,
+      "mechanism": "Line 310 checks `if not (_digest_auth):` before assigning `prep.headers[\"Authorization\"] = _digest_auth` at line 311, inverted compared to the correct pattern at lines 329-330 (`if _digest_auth: r.headers[...] = _digest_auth`), so the header is only set when build_digest_header returns falsy/empty.",
+      "file": "auth.py",
+      "error": null
+    },
+    {
+      "claim_id": "c11",
+      "verdict": "GENUINE_BUG",
+      "confidence": 0.92,
+      "mechanism": "At runtime TYPE_CHECKING is False so `not (TYPE_CHECKING)` is True, executing line 49's bare `import chardet` (no try/except) while `_resolve_char_detection()` on line 51 is only reachable in the type-checker's simulated branch, so a real environment with only charset_normalizer installed raises ModuleNotFoundError on import.",
+      "file": "compat.py",
+      "error": null
+    },
+    {
+      "claim_id": "c12",
+      "verdict": "REAL_NOT_BUG",
+      "confidence": 0.65,
+      "mechanism": "Line 132 truly lacks `return`, so `getheaders()` always yields None, but this method is dead code in practice \u2014 http.cookiejar (and extract_cookies_to_jar via jar.extract_cookies(res, req)) only ever calls `MockResponse.info()`, never `.getheaders()`, so the defect isn't exercised by the shown call path.",
+      "file": "cookies.py",
+      "error": null
+    },
+    {
+      "claim_id": "c13",
+      "verdict": "GENUINE_BUG",
+      "confidence": 0.88,
+      "mechanism": "Line 326 returns True only when a domain repeats (e.g. two cookies both on 'example.com'), and falls through to False when all domains are distinct (e.g. 'a.com' and 'b.com' each once), which is the inverse of the documented 'True if multiple domains' contract.",
+      "file": "cookies.py",
+      "error": null
+    },
+    {
+      "claim_id": "c14",
+      "verdict": "GENUINE_BUG",
+      "confidence": 0.98,
+      "mechanism": "Line 516 computes `set(kwargs) + set(result)`, but Python's built-in `set` has no `__add__`/`__radd__`, so this raises `TypeError: unsupported operand type(s) for +: 'set' and 'set'` on every invocation, including internal callers like `morsel_to_cookie`.",
+      "file": "cookies.py",
+      "error": null
+    },
+    {
+      "claim_id": "c15",
+      "verdict": "GENUINE_BUG",
+      "confidence": 0.97,
+      "mechanism": "Line 33's `if not (response is not None and not self.request and hasattr(response, \"request\"))` inverts the original intended guard, so when `response is None` (the common case for ConnectionError/Timeout/etc. raised without a response) the body at line 34 still executes `self.request = response.request`, raising AttributeError on None, and when `self.request` was explicitly passed while `response",
+      "file": "exceptions.py",
+      "error": null
+    },
+    {
+      "claim_id": "c16",
+      "verdict": "GENUINE_BUG",
+      "confidence": 0.85,
+      "mechanism": "Line 113 sets using_charset_normalizer based on `chardet is None` rather than checking `charset_normalizer is not None`, so when both charset_normalizer and chardet fail to import (lines 14-22), using_charset_normalizer reports True even though charset_normalizer is not actually available/used.",
+      "file": "help.py",
+      "error": null
+    },
+    {
+      "claim_id": "c17",
+      "verdict": "GENUINE_BUG",
+      "confidence": 0.98,
+      "mechanism": "Line 131 uses `if not (__name__ == \"__main__\")`, which is true precisely when the module is imported (not run as script), so `main()` executes on import and is skipped when run directly \u2014 the exact inverse of the intended `if __name__ == \"__main__\"` behavior.",
+      "file": "help.py",
+      "error": null
+    },
+    {
+      "claim_id": "c18",
+      "verdict": "GENUINE_BUG",
+      "confidence": 0.95,
+      "mechanism": "Line 942-943 catches DecodeError and does `pass` instead of raising ContentDecodingError, so the generator falls through to `self._content_consumed = True` and silently stops, making a truncated/corrupted compressed body indistinguishable from a normal end-of-stream.",
+      "file": "models.py",
+      "error": null
+    },
+    {
+      "claim_id": "c19",
+      "verdict": "GENUINE_BUG",
+      "confidence": 0.98,
+      "mechanism": "Line 1017 uses `(pending) - (chunk)` instead of `pending + chunk`; str/bytes objects don't support `-`, so this raises TypeError as soon as `pending is not None`, i.e. any time a line spans two chunks.",
+      "file": "models.py",
+      "error": null
+    },
+    {
+      "claim_id": "c20",
+      "verdict": "GENUINE_BUG",
+      "confidence": 0.93,
+      "mechanism": "`if not (\"proxies\" not in kwargs)` reduces to `if \"proxies\" in kwargs`, the inverse of the correct `if \"proxies\" not in kwargs` idiom, so at line 763 it overwrites an already-present (caller/merge_environment_settings-supplied) proxies value with resolve_proxies() and does nothing when proxies is absent, leaving session.proxies/trust_env resolution unapplied for direct send() calls.",
+      "file": "sessions.py",
+      "error": null
+    },
+    {
+      "claim_id": "c21",
+      "verdict": "GENUINE_BUG",
+      "confidence": 0.98,
+      "mechanism": "Line 787 computes `elapsed = (preferred_clock()) + (start)`, adding the end and start clock readings instead of subtracting `start` from the end value, so `r.elapsed` is set to a nonsensical, inflated duration rather than the actual request time.",
+      "file": "sessions.py",
+      "error": null
+    },
+    {
+      "claim_id": "c22",
+      "verdict": "GENUINE_BUG",
+      "confidence": 0.85,
+      "mechanism": "Line 27 bundles \"early-hints\" under code 102 (WebDAV Processing) instead of under 103, so codes['early-hints'] resolves to 102 instead of the correct HTTP 103 Early Hints per RFC 8297.",
+      "file": "status_codes.py",
+      "error": null
+    },
+    {
+      "claim_id": "c23",
+      "verdict": "GENUINE_BUG",
+      "confidence": 0.98,
+      "mechanism": "Line 122 applies `-` (subtraction) between two str operands, which Python does not support for strings, so `_init()` raises TypeError unconditionally at module import since `__doc__` is not None.",
+      "file": "status_codes.py",
+      "error": null
+    },
+    {
+      "claim_id": "c24",
+      "verdict": "GENUINE_BUG",
+      "confidence": 0.85,
+      "mechanism": "dict.__setitem__ is not overridden so `lookup['x']=1` writes into the real dict storage, but __getitem__ (line 121) only reads self.__dict__, so `lookup['x']` returns None instead of 1.",
+      "file": "structures.py",
+      "error": null
+    },
+    {
+      "claim_id": "c25",
+      "verdict": "REAL_NOT_BUG",
+      "confidence": 0.85,
+      "mechanism": "get() mirrors __getitem__ (line 118-121), which already reads only self.__dict__ by design (LookupDict is populated via setattr in status_codes.py, not dict mutation), so this is consistent intentional behavior, not a new defect introduced by get().",
+      "file": "structures.py",
+      "error": null
+    },
+    {
+      "claim_id": "c26",
+      "verdict": "GENUINE_BUG",
+      "confidence": 0.95,
+      "mechanism": "range(1, len(parts)-1) at line 687 never visits the last split segment, so for a URI like \"100%25\" (parts=[\"100\",\"25\"], len=2) the loop body never executes and parts[1] never gets its '%' restored, silently dropping the percent sign on join (\"10025\" instead of \"100%25\").",
+      "file": "utils.py",
+      "error": null
+    },
+    {
+      "claim_id": "c27",
+      "verdict": "GENUINE_BUG",
+      "confidence": 0.9,
+      "mechanism": "The `except BaseException: os.remove(tmp_name); pass` block has no `raise`, so any exception from the yielded write block or from `os.replace` (line 335) is caught and discarded instead of propagating to the caller.",
+      "file": "utils.py",
+      "error": null
+    },
+    {
+      "claim_id": "c28",
+      "verdict": "GENUINE_BUG",
+      "confidence": 0.85,
+      "mechanism": "`param.split(\"=\")` at line 991 has no maxsplit, so a value containing '=' (e.g. a URL with a query string as a link param) yields >2 parts, raises ValueError, and the `except: break` at line 993 aborts parsing of all remaining params for that link, not just the offending one.",
+      "file": "utils.py",
+      "error": null
+    },
+    {
+      "claim_id": "c29",
+      "verdict": "REFUTED",
+      "confidence": 0.0,
+      "mechanism": "",
+      "file": "utils.py",
+      "error": null
+    }
+  ]
+}

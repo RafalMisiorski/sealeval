@@ -1,0 +1,115 @@
+{
+  "judge_model": "sonnet",
+  "claims_judged": 13,
+  "genuine_bug": 11,
+  "real_not_bug": 1,
+  "refuted": 1,
+  "errored": 0,
+  "precision_genuine_bug": 0.846,
+  "verdicts": [
+    {
+      "claim_id": "g1",
+      "verdict": "GENUINE_BUG",
+      "confidence": 0.9,
+      "mechanism": "Line 86's inverted condition `elif not (charset_normalizer_version):` enters the branch only when charset_normalizer_version is falsy, so line 87 calls `.split(\".\")` on None causing an AttributeError (uncaught by the caller's `except (AssertionError, ValueError)` at line 118) when both chardet and charset_normalizer are absent, while skipping the actual version check (falling to the else-warning b",
+      "file": "__init__.py",
+      "error": null
+    },
+    {
+      "claim_id": "g2",
+      "verdict": "GENUINE_BUG",
+      "confidence": 0.97,
+      "mechanism": "Line 31's `not isinstance(string, builtin_str)` inverts the original logic: native str input falls to the else branch calling `string.decode(encoding)` (str has no decode in Py3, raising AttributeError), while bytes input hits `out = string` and is returned undecoded.",
+      "file": "_internal_utils.py",
+      "error": null
+    },
+    {
+      "claim_id": "g3",
+      "verdict": "GENUINE_BUG",
+      "confidence": 0.85,
+      "mechanism": "All the type aliases and TypedDicts (UriType, ParamsType, DataType, JsonType, RequestKwargs, etc.) are defined only inside `if not (TYPE_CHECKING):` with no TYPE_CHECKING-branch counterpart, so type checkers (which treat TYPE_CHECKING as True, making `not TYPE_CHECKING` False) will treat this whole block as unreachable and never bind these names, leaving every consumer importing them unresolved du",
+      "file": "_types.py",
+      "error": null
+    },
+    {
+      "claim_id": "g4",
+      "verdict": "GENUINE_BUG",
+      "confidence": 0.85,
+      "mechanism": "Line 18's `if not (TYPE_CHECKING):` inverts the standard guard: at runtime (TYPE_CHECKING=False) the block executes, forcing an unconditional runtime import of typing_extensions and the internal `_types` module, while during actual type-checking (TYPE_CHECKING=True) the branch is pruned/unreachable so `Unpack` and `_t` are never bound, breaking every annotation that uses them (e.g. lines 25, 75, 9",
+      "file": "api.py",
+      "error": null
+    },
+    {
+      "claim_id": "g5",
+      "verdict": "GENUINE_BUG",
+      "confidence": 0.97,
+      "mechanism": "Line 310 uses `if not (_digest_auth):` before setting `prep.headers[\"Authorization\"] = _digest_auth` at line 311, so the header is only assigned when build_digest_header returns a falsy value, inverted from the correct behavior seen at line 329 (`if _digest_auth:`).",
+      "file": "auth.py",
+      "error": null
+    },
+    {
+      "claim_id": "g6",
+      "verdict": "GENUINE_BUG",
+      "confidence": 0.9,
+      "mechanism": "At runtime TYPE_CHECKING is False so `not (TYPE_CHECKING)` is True, executing the unconditional `import chardet` (line 49) instead of the graceful `_resolve_char_detection()` fallback, which will raise ImportError/ModuleNotFoundError and break the entire `requests` import in any environment that only has charset_normalizer installed (the common case since requests depends on charset-normalizer by ",
+      "file": "compat.py",
+      "error": null
+    },
+    {
+      "claim_id": "g7",
+      "verdict": "REAL_NOT_BUG",
+      "confidence": 0.65,
+      "mechanism": "Line 132 indeed lacks `return`, so `getheaders()` always yields None, but `extract_cookies_to_jar` only calls `jar.extract_cookies(res, req)` which relies on `res.info()` (line 128-129); `http.cookiejar` internals fetch headers via `.info()`/`.get_all()`, not `MockResponse.getheaders()`, making this method dead/vestigial rather than an exercised defect.",
+      "file": "cookies.py",
+      "error": null
+    },
+    {
+      "claim_id": "g8",
+      "verdict": "GENUINE_BUG",
+      "confidence": 0.9,
+      "mechanism": "The check at line 325-326 returns True as soon as a cookie's domain repeats a previously seen domain (e.g., two cookies from the same site), while distinct domains that each appear only once are appended without ever matching the `in domains` test, so the loop falls through to `return False` even when the jar truly holds multiple domains \u2014 the duplicate-detection logic is inverted relative to the ",
+      "file": "cookies.py",
+      "error": null
+    },
+    {
+      "claim_id": "g9",
+      "verdict": "GENUINE_BUG",
+      "confidence": 0.98,
+      "mechanism": "Line 516 computes `set(kwargs) + set(result)`, and Python's built-in set type has no `__add__`, so any call to create_cookie (including via morsel_to_cookie) raises `TypeError: unsupported operand type(s) for +: 'set' and 'set'` unconditionally.",
+      "file": "cookies.py",
+      "error": null
+    },
+    {
+      "claim_id": "g10",
+      "verdict": "GENUINE_BUG",
+      "confidence": 0.97,
+      "mechanism": "When response is None (e.g. `ConnectionError(err, request=request)` in adapters.py), `not (response is not None and ...)` evaluates to `not False = True`, so line 34 executes `self.request = response.request` on a None response, raising AttributeError instead of constructing the exception; conversely when response is valid and self.request is unset, the inner condition is True so the outer `not` s",
+      "file": "exceptions.py",
+      "error": null
+    },
+    {
+      "claim_id": "g11",
+      "verdict": "REFUTED",
+      "confidence": 0.75,
+      "mechanism": "This mirrors requests' actual detector-selection logic elsewhere in the codebase (chardet takes precedence when installed, otherwise charset_normalizer is used as the fallback), so `chardet is None` correctly reflects when charset_normalizer is in use rather than being a mismatched variable check.",
+      "file": "help.py",
+      "error": null
+    },
+    {
+      "claim_id": "g12",
+      "verdict": "GENUINE_BUG",
+      "confidence": 0.97,
+      "mechanism": "Line 131 reads `if not (__name__ == \"__main__\")`, which is inverted from the standard `if __name__ == \"__main__\"` guard, so main() runs on import and is skipped when executed directly as a script.",
+      "file": "help.py",
+      "error": null
+    },
+    {
+      "claim_id": "g13",
+      "verdict": "GENUINE_BUG",
+      "confidence": 0.98,
+      "mechanism": "Line 122 uses `-` between two strings which Python does not support for str, so `_init()` (called unconditionally at line 128 while `__doc__` is non-None) raises a TypeError on module import.",
+      "file": "status_codes.py",
+      "error": null
+    }
+  ]
+}

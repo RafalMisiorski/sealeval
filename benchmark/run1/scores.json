@@ -1,0 +1,68 @@
+{
+  "meta": {
+    "common_subset_files": [
+      "__init__.py",
+      "_internal_utils.py",
+      "_types.py",
+      "api.py",
+      "auth.py",
+      "compat.py",
+      "cookies.py",
+      "exceptions.py",
+      "help.py",
+      "status_codes.py",
+      "structures.py"
+    ],
+    "common_subset_injections": 14,
+    "gemini_dnf_files": [
+      "adapters.py",
+      "models.py",
+      "sessions.py",
+      "utils.py"
+    ]
+  },
+  "table": [
+    {
+      "system": "claude",
+      "claims": 17,
+      "tp": 8,
+      "precision": 0.471,
+      "recall": 0.333,
+      "matched_injections": 8,
+      "judge_genuine_rate": 0.471,
+      "subset_claims": 9,
+      "subset_tp": 2,
+      "subset_precision": 0.222,
+      "subset_recall": 0.143,
+      "subset_matched": 2
+    },
+    {
+      "system": "codex",
+      "claims": 29,
+      "tp": 18,
+      "precision": 0.621,
+      "recall": 0.75,
+      "matched_injections": 18,
+      "judge_genuine_rate": 0.862,
+      "subset_claims": 19,
+      "subset_tp": 11,
+      "subset_precision": 0.579,
+      "subset_recall": 0.786,
+      "subset_matched": 11
+    },
+    {
+      "system": "gemini",
+      "claims": 13,
+      "tp": 10,
+      "precision": 0.769,
+      "recall": 0.417,
+      "matched_injections": 10,
+      "judge_genuine_rate": 0.846,
+      "subset_claims": 13,
+      "subset_tp": 10,
+      "subset_precision": 0.769,
+      "subset_recall": 0.714,
+      "subset_matched": 10
+    }
+  ]
+}

@@ -1,0 +1,147 @@
+{
+  "judge_model": "sonnet",
+  "claims_judged": 17,
+  "genuine_bug": 8,
+  "real_not_bug": 0,
+  "refuted": 9,
+  "errored": 0,
+  "precision_genuine_bug": 0.471,
+  "verdicts": [
+    {
+      "claim_id": "c1",
+      "verdict": "GENUINE_BUG",
+      "confidence": 0.95,
+      "mechanism": "Line 86's inverted condition skips charset_normalizer validation when present (falling through to the wrong warning) and instead calls `charset_normalizer_version.split(\".\")` when it's None, raising an uncaught AttributeError (not caught by the AssertionError/ValueError except at line 118) when neither chardet nor charset_normalizer is installed.",
+      "file": "__init__.py",
+      "error": null
+    },
+    {
+      "claim_id": "c2",
+      "verdict": "REFUTED",
+      "confidence": 0.0,
+      "mechanism": "",
+      "file": "_internal_utils.py",
+      "error": null
+    },
+    {
+      "claim_id": "c3",
+      "verdict": "REFUTED",
+      "confidence": 0.0,
+      "mechanism": "",
+      "file": "_types.py",
+      "error": null
+    },
+    {
+      "claim_id": "c4",
+      "verdict": "REFUTED",
+      "confidence": 0.0,
+      "mechanism": "",
+      "file": "adapters.py",
+      "error": null
+    },
+    {
+      "claim_id": "c5",
+      "verdict": "REFUTED",
+      "confidence": 0.0,
+      "mechanism": "",
+      "file": "adapters.py",
+      "error": null
+    },
+    {
+      "claim_id": "c6",
+      "verdict": "REFUTED",
+      "confidence": 0.0,
+      "mechanism": "",
+      "file": "auth.py",
+      "error": null
+    },
+    {
+      "claim_id": "c7",
+      "verdict": "REFUTED",
+      "confidence": 0.0,
+      "mechanism": "",
+      "file": "auth.py",
+      "error": null
+    },
+    {
+      "claim_id": "c8",
+      "verdict": "REFUTED",
+      "confidence": 0.0,
+      "mechanism": "",
+      "file": "compat.py",
+      "error": null
+    },
+    {
+      "claim_id": "c9",
+      "verdict": "REFUTED",
+      "confidence": 0.0,
+      "mechanism": "",
+      "file": "exceptions.py",
+      "error": null
+    },
+    {
+      "claim_id": "c10",
+      "verdict": "REFUTED",
+      "confidence": 0.0,
+      "mechanism": "",
+      "file": "help.py",
+      "error": null
+    },
+    {
+      "claim_id": "c11",
+      "verdict": "GENUINE_BUG",
+      "confidence": 0.95,
+      "mechanism": "Line 942-943 catches DecodeError and passes silently instead of raising ContentDecodingError, unlike ProtocolError\u2192ChunkedEncodingError (940-941) and other exceptions that are properly converted.",
+      "file": "models.py",
+      "error": null
+    },
+    {
+      "claim_id": "c12",
+      "verdict": "GENUINE_BUG",
+      "confidence": 0.98,
+      "mechanism": "Line 1017 uses `(pending) - (chunk)` where pending/chunk are str or bytes; the `-` operator is unsupported for these types, so a TypeError is raised on the second iteration whenever a prior chunk left a pending fragment (i.e., whenever `pending is not None` at line 1015), instead of concatenating with `+`.",
+      "file": "models.py",
+      "error": null
+    },
+    {
+      "claim_id": "c13",
+      "verdict": "GENUINE_BUG",
+      "confidence": 0.97,
+      "mechanism": "`if not (\"proxies\" not in kwargs):` reduces to `if \"proxies\" in kwargs:`, the opposite of the intended `if \"proxies\" not in kwargs:` setdefault-style guard, so explicit per-call proxies are overwritten by resolve_proxies() while calls without proxies never get self.proxies/env-resolved proxies set at all before adapter.send().",
+      "file": "sessions.py",
+      "error": null
+    },
+    {
+      "claim_id": "c14",
+      "verdict": "GENUINE_BUG",
+      "confidence": 0.98,
+      "mechanism": "Line 787 computes `(preferred_clock()) + (start)` instead of subtracting start from the end time, so `r.elapsed` is set to a bogus sum (~2x current epoch time in seconds) rather than the actual request duration.",
+      "file": "sessions.py",
+      "error": null
+    },
+    {
+      "claim_id": "c15",
+      "verdict": "GENUINE_BUG",
+      "confidence": 0.98,
+      "mechanism": "Line 122 applies the `-` operator between two `str` objects; `str.__sub__` doesn't exist, so this raises `TypeError` unconditionally at import time since `_init()` is called at line 128 and `__doc__` is not None (docstring defined at lines 1-19).",
+      "file": "status_codes.py",
+      "error": null
+    },
+    {
+      "claim_id": "c16",
+      "verdict": "GENUINE_BUG",
+      "confidence": 0.95,
+      "mechanism": "The except block at lines 336-338 catches BaseException, removes the temp file, but ends with bare `pass` instead of `raise`, so per Python semantics the exception is not propagated and the `with atomic_open(...)` block silently succeeds despite the underlying I/O error.",
+      "file": "utils.py",
+      "error": null
+    },
+    {
+      "claim_id": "c17",
+      "verdict": "GENUINE_BUG",
+      "confidence": 0.95,
+      "mechanism": "range(1, len(parts)-1) skips index len(parts)-1, the last split segment, so it's never re-prefixed with '%' in the else branch nor decoded in the if branch (parts[i] = c + ... or parts[i] = '%' + parts[i] never executes for it), so join() silently drops the '%' from the final percent-escape sequence, e.g. 'abc%20def'.split('%') -> ['abc','20def'] with range(1,1) empty yields 'abc20def'.",
+      "file": "utils.py",
+      "error": null
+    }
+  ]
+}
