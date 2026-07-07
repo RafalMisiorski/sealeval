@@ -1,0 +1,80 @@
+[
+  {
+    "id": "g1",
+    "file": "__init__.py",
+    "line": 86,
+    "claim": "The compatibility check for charset_normalizer has an inverted condition ('not (charset_normalizer_version)') that raises an AttributeError when the library is missing and fails to check the version when it is present."
+  },
+  {
+    "id": "g2",
+    "file": "_internal_utils.py",
+    "line": 31,
+    "claim": "The type check condition is inverted, causing bytes to be returned unchanged and native strings to fail with an AttributeError when decode is called."
+  },
+  {
+    "id": "g3",
+    "file": "_types.py",
+    "line": 55,
+    "claim": "The type-checking block condition is inverted to 'if not (TYPE_CHECKING):', which prevents static type checkers from importing the required types and resolving type aliases."
+  },
+  {
+    "id": "g4",
+    "file": "api.py",
+    "line": 18,
+    "claim": "The condition `not (TYPE_CHECKING)` is inverted, causing type-checking imports to be executed at runtime and omitted during type checking."
+  },
+  {
+    "id": "g5",
+    "file": "auth.py",
+    "line": 310,
+    "claim": "The condition is inverted, preventing the Authorization header from being set when digest authentication is successfully generated."
+  },
+  {
+    "id": "g6",
+    "file": "compat.py",
+    "line": 48,
+    "claim": "The conditional check on TYPE_CHECKING is inverted, causing chardet to be imported directly at runtime instead of calling _resolve_char_detection."
+  },
+  {
+    "id": "g7",
+    "file": "cookies.py",
+    "line": 132,
+    "claim": "The getheaders method is missing a return statement, causing it to return None instead of the headers."
+  },
+  {
+    "id": "g8",
+    "file": "cookies.py",
+    "line": 326,
+    "claim": "The multiple_domains method incorrectly returns True when a domain is duplicated, and returns False when there are multiple distinct domains."
+  },
+  {
+    "id": "g9",
+    "file": "cookies.py",
+    "line": 516,
+    "claim": "The + operator is not supported for set objects, which will cause a TypeError at runtime when create_cookie is called."
+  },
+  {
+    "id": "g10",
+    "file": "exceptions.py",
+    "line": 33,
+    "claim": "The conditional check is inverted by the outer 'not', causing an AttributeError when response is None and preventing the assignment when response is valid."
+  },
+  {
+    "id": "g11",
+    "file": "help.py",
+    "line": 113,
+    "claim": "The value of using_charset_normalizer is determined by checking if chardet is None, instead of checking if charset_normalizer is not None."
+  },
+  {
+    "id": "g12",
+    "file": "help.py",
+    "line": 131,
+    "claim": "The conditional check is inverted, causing main() to be executed when the module is imported rather than when run as the main script."
+  },
+  {
+    "id": "g13",
+    "file": "status_codes.py",
+    "line": 122,
+    "claim": "String subtraction operator is used instead of string concatenation, which raises a TypeError."
+  }
+]

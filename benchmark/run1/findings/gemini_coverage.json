@@ -1,0 +1,27 @@
+{
+  "reviewed": [
+    "__init__.py",
+    "__version__.py",
+    "_internal_utils.py",
+    "_types.py",
+    "api.py",
+    "auth.py",
+    "certs.py",
+    "compat.py",
+    "cookies.py",
+    "exceptions.py",
+    "help.py",
+    "hooks.py",
+    "packages.py",
+    "status_codes.py",
+    "structures.py"
+  ],
+  "dnf_oversized": [
+    "adapters.py",
+    "models.py",
+    "sessions.py",
+    "utils.py"
+  ],
+  "argv_guard": 32000,
+  "note": "agy --print argv limit; DNF files not reviewed by gemini; their sealed injections count as gemini misses (disclosed)"
+}

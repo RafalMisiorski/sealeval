@@ -1,0 +1,176 @@
+[
+  {
+    "id": "c1",
+    "file": "__init__.py",
+    "line": 86,
+    "claim": "The condition is inverted: when `charset_normalizer_version` is `None` this branch calls `.split()` on `None` at line 87, and when it is present the code incorrectly falls through to the warning path instead of validating it."
+  },
+  {
+    "id": "c2",
+    "file": "_internal_utils.py",
+    "line": 31,
+    "claim": "The type check is inverted, so `bytes` inputs are returned unchanged instead of being decoded to `str`."
+  },
+  {
+    "id": "c3",
+    "file": "_internal_utils.py",
+    "line": 34,
+    "claim": "For `str` inputs, the function calls `.decode(...)` on a native string, which raises `AttributeError` in Python 3."
+  },
+  {
+    "id": "c4",
+    "file": "_types.py",
+    "line": 34,
+    "claim": "`has_read()` returns `True` for any object that merely has a `read` attribute, even when that attribute is not callable, so it can incorrectly narrow non-readable objects and lead to later call failures."
+  },
+  {
+    "id": "c5",
+    "file": "_types.py",
+    "line": 55,
+    "claim": "The `if not TYPE_CHECKING` guard is inverted, so the imports and type aliases inside this block are skipped during static type checking, leaving annotations such as `PreparedRequest`, `Response`, `TypeIs`, and `_ValidatedRequest` undefined to type checkers."
+  },
+  {
+    "id": "c6",
+    "file": "adapters.py",
+    "line": 711,
+    "claim": "This `pass` swallows `ProtocolError`/`OSError`, so execution continues with `resp` never assigned and later fails instead of raising the original connection error."
+  },
+  {
+    "id": "c7",
+    "file": "adapters.py",
+    "line": 738,
+    "claim": "The `not` in this `_SSLError` check is inverted, causing non-SSL exceptions like `ReadTimeoutError` and `_InvalidHeader` to be wrongly raised as `SSLError` while real `_SSLError` instances fall through incorrectly."
+  },
+  {
+    "id": "c8",
+    "file": "api.py",
+    "line": 18,
+    "claim": "The `TYPE_CHECKING` guard is inverted, so `_t` and `Unpack` are not imported during static type checking, leaving the annotations in this module unresolved."
+  },
+  {
+    "id": "c9",
+    "file": "auth.py",
+    "line": 293,
+    "claim": "`s_auth` can be `None` when the response lacks a `WWW-Authenticate` header, so calling `s_auth.lower()` will raise an `AttributeError`."
+  },
+  {
+    "id": "c10",
+    "file": "auth.py",
+    "line": 310,
+    "claim": "The condition is inverted: it assigns the `Authorization` header only when `build_digest_header()` returned a falsy value, so valid digest credentials are never attached to the retried request."
+  },
+  {
+    "id": "c11",
+    "file": "compat.py",
+    "line": 48,
+    "claim": "The `TYPE_CHECKING` branch is inverted, so at runtime this file always does `import chardet` and never calls `_resolve_char_detection()`, causing an import failure when only `charset_normalizer` is available."
+  },
+  {
+    "id": "c12",
+    "file": "cookies.py",
+    "line": 132,
+    "claim": "`MockResponse.getheaders()` discards the result of `self._headers.getheaders(name)` and always returns `None`, so callers cannot retrieve header values through this adapter method."
+  },
+  {
+    "id": "c13",
+    "file": "cookies.py",
+    "line": 326,
+    "claim": "`multiple_domains()` returns `True` when it sees a repeated domain and `False` for distinct domains, which inverts its documented meaning and misreports whether the jar spans multiple domains."
+  },
+  {
+    "id": "c14",
+    "file": "cookies.py",
+    "line": 516,
+    "claim": "`create_cookie()` uses `+` between two `set` objects, which raises `TypeError` on every call and prevents any cookie from being created."
+  },
+  {
+    "id": "c15",
+    "file": "exceptions.py",
+    "line": 33,
+    "claim": "The condition is inverted: it assigns `self.request = response.request` when `response` is `None` or a request was already supplied, which can raise an `AttributeError` and also overwrite an explicit `request` argument."
+  },
+  {
+    "id": "c16",
+    "file": "help.py",
+    "line": 113,
+    "claim": "`using_charset_normalizer` is derived from `chardet is None`, so it incorrectly reports `True` when `charset_normalizer` is unavailable but `chardet` also failed to import."
+  },
+  {
+    "id": "c17",
+    "file": "help.py",
+    "line": 131,
+    "claim": "The `__name__` guard is inverted, causing `main()` to run on import and not run when the file is executed as a script."
+  },
+  {
+    "id": "c18",
+    "file": "models.py",
+    "line": 943,
+    "claim": "`DecodeError` is swallowed here instead of being re-raised as a `ContentDecodingError`, causing corrupted/compressed response bodies to fail silently as though the stream ended normally."
+  },
+  {
+    "id": "c19",
+    "file": "models.py",
+    "line": 1017,
+    "claim": "This uses subtraction instead of concatenation when prepending `pending` to the next chunk, which raises `TypeError` and breaks `iter_lines()` whenever a line spans chunks."
+  },
+  {
+    "id": "c20",
+    "file": "sessions.py",
+    "line": 762,
+    "claim": "The proxy-defaulting condition is inverted, so `send()` overwrites caller-supplied proxies and skips populating proxies when the argument is omitted."
+  },
+  {
+    "id": "c21",
+    "file": "sessions.py",
+    "line": 787,
+    "claim": "Elapsed time is computed by adding the start and end timestamps instead of subtracting them, producing an incorrect, excessively large `Response.elapsed` value."
+  },
+  {
+    "id": "c22",
+    "file": "status_codes.py",
+    "line": 27,
+    "claim": "`early-hints` is mapped to status 102 even though HTTP Early Hints is status 103, so lookups for that name return the wrong code."
+  },
+  {
+    "id": "c23",
+    "file": "status_codes.py",
+    "line": 122,
+    "claim": "This uses string subtraction instead of concatenation, which raises `TypeError` during `_init()` and breaks module import."
+  },
+  {
+    "id": "c24",
+    "file": "structures.py",
+    "line": 121,
+    "claim": "`__getitem__` reads from `self.__dict__` instead of the underlying `dict`, so values stored via inherited dict operations like `lookup['x'] = 1` cannot be retrieved with `lookup['x']`."
+  },
+  {
+    "id": "c25",
+    "file": "structures.py",
+    "line": 130,
+    "claim": "`get()` also reads from `self.__dict__` rather than the underlying `dict`, so it returns the default instead of values previously stored through normal dict mutation methods."
+  },
+  {
+    "id": "c26",
+    "file": "utils.py",
+    "line": 687,
+    "claim": "The loop stops before the last '%' segment, so a URI containing only one or a trailing percent-escape drops the '%' and skips the intended validation/decoding for that escape."
+  },
+  {
+    "id": "c27",
+    "file": "utils.py",
+    "line": 336,
+    "claim": "This `except BaseException` block removes the temp file and then suppresses the exception, so errors from the caller's write block or `os.replace` are silently swallowed."
+  },
+  {
+    "id": "c28",
+    "file": "utils.py",
+    "line": 991,
+    "claim": "Splitting link parameters on every '=' instead of only the first one causes valid values containing '=' to raise `ValueError` and abort parsing the rest of that link's parameters."
+  },
+  {
+    "id": "c29",
+    "file": "utils.py",
+    "line": 1080,
+    "claim": "If the URL has a username but no password, `unquote(parsed.password)` raises `TypeError` and the broad handler incorrectly returns `('', '')`, discarding the valid username."
+  }
+]

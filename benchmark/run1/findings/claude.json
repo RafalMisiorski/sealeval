@@ -1,0 +1,104 @@
+[
+  {
+    "id": "c1",
+    "file": "__init__.py",
+    "line": 86,
+    "claim": "Condition is inverted: `elif not (charset_normalizer_version):` should be `elif charset_normalizer_version:` \u2014 as written, the charset_normalizer version check only runs when charset_normalizer_version is falsy (causing an AttributeError from calling .split on None) and is skipped when it's actually present, incorrectly falling through to the 'unable to find dependency' warning."
+  },
+  {
+    "id": "c2",
+    "file": "_internal_utils.py",
+    "line": 31,
+    "claim": "The isinstance check is inverted: when string is already a builtin_str (str), the code calls string.decode(encoding), but str has no decode() method (that only exists on bytes), causing an AttributeError; when string is bytes, it's returned unchanged instead of being decoded."
+  },
+  {
+    "id": "c3",
+    "file": "_types.py",
+    "line": 55,
+    "claim": "The condition `if not (TYPE_CHECKING):` is inverted \u2014 it should be `if TYPE_CHECKING:` \u2014 so all these type aliases/TypedDicts/imports (ParamsType, DataType, BodyType, HeadersType, FilesType, AuthType, RequestKwargs, PreparedRequest/Response/AuthBase/RequestsCookieJar/CaseInsensitiveDict imports, TypeIs, etc.) are invisible to static type checkers (which set TYPE_CHECKING=True, treating this block "
+  },
+  {
+    "id": "c4",
+    "file": "adapters.py",
+    "line": 710,
+    "claim": "The except (ProtocolError, OSError) handler just does `pass` instead of raising ConnectionError, so `resp` is never assigned and the subsequent `return self.build_response(request, resp)` at line 748 raises an UnboundLocalError, silently discarding the original network error."
+  },
+  {
+    "id": "c5",
+    "file": "adapters.py",
+    "line": 738,
+    "claim": "The condition `if not (isinstance(e, _SSLError))` is inverted: it raises SSLError for exceptions that are NOT _SSLError (e.g. ReadTimeoutError/_InvalidHeader instances get wrongly wrapped as SSLError), while actual _SSLError instances fall through to the `else: raise` and are never wrapped in requests' SSLError."
+  },
+  {
+    "id": "c6",
+    "file": "auth.py",
+    "line": 291,
+    "claim": "s_auth = r.headers.get(\"www-authenticate\") has no default value, so if a 4xx response lacks this header, s_auth is None and the subsequent s_auth.lower() call raises AttributeError."
+  },
+  {
+    "id": "c7",
+    "file": "auth.py",
+    "line": 310,
+    "claim": "Condition is inverted: `if not (_digest_auth):` sets prep.headers[\"Authorization\"] = _digest_auth only when _digest_auth is falsy/None, instead of setting it when a valid digest header was built, breaking digest auth retry on 401."
+  },
+  {
+    "id": "c8",
+    "file": "compat.py",
+    "line": 48,
+    "claim": "The condition is inverted: at runtime (TYPE_CHECKING is False, so `not TYPE_CHECKING` is True) it directly does `import chardet`, which will raise an uncaught ImportError if only charset_normalizer is installed (the common case), while the safe `_resolve_char_detection()` fallback is only used in the TYPE_CHECKING branch that never executes at runtime."
+  },
+  {
+    "id": "c9",
+    "file": "exceptions.py",
+    "line": 33,
+    "claim": "The condition is inverted with `not(...)`: when response is None (the common case, e.g. exceptions raised without a response kwarg), the negated condition becomes True and the code executes `self.request = response.request`, raising AttributeError on NoneType; the original intent (only override self.request from response.request when response is set, request is unset, and response has a request at"
+  },
+  {
+    "id": "c10",
+    "file": "help.py",
+    "line": 131,
+    "claim": "The `__main__` guard condition is inverted (`if not (__name__ == \"__main__\")`), causing `main()` to run whenever the module is imported rather than only when executed as a script."
+  },
+  {
+    "id": "c11",
+    "file": "models.py",
+    "line": 943,
+    "claim": "DecodeError from the raw stream is silently swallowed (pass) instead of being converted to ContentDecodingError, so content decoding failures are hidden instead of surfaced (ContentDecodingError is imported but never used)."
+  },
+  {
+    "id": "c12",
+    "file": "models.py",
+    "line": 1017,
+    "claim": "Uses subtraction `(pending) - (chunk)` instead of concatenation `pending + chunk` to join the leftover buffer with the next chunk; str/bytes don't support `-`, so this raises TypeError whenever a pending fragment exists in iter_lines."
+  },
+  {
+    "id": "c13",
+    "file": "sessions.py",
+    "line": 762,
+    "claim": "The condition `if not (\"proxies\" not in kwargs):` is equivalent to `if \"proxies\" in kwargs:`, inverting the intended check; it now overwrites the already-merged per-request proxies with `resolve_proxies(request, self.proxies, self.trust_env)` when proxies IS present in kwargs (discarding request-level proxy overrides), and skips setting proxies entirely when it is absent from kwargs (e.g. calling "
+  },
+  {
+    "id": "c14",
+    "file": "sessions.py",
+    "line": 787,
+    "claim": "Elapsed time is computed as `preferred_clock() + start` instead of `preferred_clock() - start`, producing a nonsensical (roughly double-the-current-time) duration instead of the actual request elapsed time."
+  },
+  {
+    "id": "c15",
+    "file": "status_codes.py",
+    "line": 122,
+    "claim": "Using the `-` operator to concatenate strings (`(__doc__ + \"\\n\") - (...)`) is invalid for str operands and will raise a TypeError at import time since `__doc__` is not None (module has a docstring)."
+  },
+  {
+    "id": "c16",
+    "file": "utils.py",
+    "line": 338,
+    "claim": "In atomic_open's exception handler, the temp file is removed but the exception is swallowed with `pass` instead of being re-raised, silently discarding I/O errors or exceptions from the caller instead of propagating them."
+  },
+  {
+    "id": "c17",
+    "file": "utils.py",
+    "line": 687,
+    "claim": "The loop range `range(1, (len(parts)) - 1)` excludes the last element of `parts`, so the segment following the final '%' in the URI is never re-prefixed with '%' or properly decoded, corrupting the last percent-escape sequence in any URI that contains one."
+  }
+]
