@@ -42,6 +42,17 @@ def test_catalog_finds_every_archetype():
             "swallowed_exception"} <= found
 
 
+def test_off_by_one_narrows_stop_not_step():
+    # regression: on range(start, stop, step) the mutation must narrow the STOP bound,
+    # never the STEP (mutating the step is not an off-by-one and mislabels the injection).
+    def mutate(code):
+        return catalog._off_by_one(ast.parse(f"x = {code}"), f"x = {code}")[0].new_src
+
+    assert mutate("range(n)") == "range((n) - 1)"
+    assert mutate("range(a, b)") == "range(a, (b) - 1)"
+    assert mutate("range(a, b, 2)") == "range(a, (b) - 1, 2)"  # step 2 untouched
+
+
 def test_seed_corpus_injects_valid_and_stable(tmp_path):
     src = tmp_path / "clean"
     (src / "pkg").mkdir(parents=True)

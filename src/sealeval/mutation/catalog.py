@@ -89,9 +89,12 @@ def _off_by_one(tree: ast.AST, src: str) -> list[Candidate]:
         arg_segs = [_seg(src, a) for a in node.args]
         if any(s is None for s in arg_segs):
             continue
-        arg_segs[-1] = f"({arg_segs[-1]}) - 1"
+        # narrow the STOP bound, never the step: range(stop) -> arg0; range(start, stop[, step]) -> arg1.
+        # (The old `arg_segs[-1]` mutated the STEP on 3-arg range -- a step change mislabeled as off-by-one.)
+        stop_i = 0 if len(arg_segs) == 1 else 1
+        arg_segs[stop_i] = f"({arg_segs[stop_i]}) - 1"
         new = "range(" + ", ".join(arg_segs) + ")"  # type: ignore[arg-type]
-        out.append(Candidate("off_by_one", node, new, "narrowed range upper bound by 1"))
+        out.append(Candidate("off_by_one", node, new, "narrowed range stop bound by 1"))
     return out
 
 
