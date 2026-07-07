@@ -90,6 +90,29 @@ def test_per_archetype_cap(tmp_path):
     assert all(c <= 2 for c in res.archetype_counts.values())
 
 
+def test_max_total_caps_injections(tmp_path):
+    src = tmp_path / "clean"
+    src.mkdir()
+    for n in range(6):
+        (src / f"m{n}.py").write_text(SAMPLE_SRC, encoding="utf-8")
+    res = seeder.seed_corpus(src, tmp_path / "corpus", per_file=5, seed=3, max_total=4)
+    assert res.mutations == 4
+
+
+def test_multibyte_source_line_numbers_stay_stable(tmp_path):
+    # non-ASCII content must not desync the line-numbered key from the mutated file
+    src = tmp_path / "clean"
+    src.mkdir()
+    body = 'def g(xs):\n    label = "café ☕ π"  # multibyte\n    for i in range(len(xs)):\n        pass\n    return label\n'
+    (src / "u.py").write_text(body, encoding="utf-8")
+    res = seeder.seed_corpus(src, tmp_path / "corpus", per_file=3, seed=1)
+    mutated = (tmp_path / "corpus" / "u.py").read_text(encoding="utf-8")
+    ast.parse(mutated)
+    assert len(mutated.splitlines()) == len(body.splitlines())  # byte-stable line count
+    for r in res.records:
+        assert mutated.splitlines()[r.line - 1] != body.splitlines()[r.line - 1]  # key line = changed line
+
+
 # ---------------------------------------------------------------------------
 # sealing
 # ---------------------------------------------------------------------------
@@ -114,6 +137,20 @@ def test_reveal_gate_and_mismatch(tmp_path):
     assert keyseal.reveal(key, seal, tmp_path / "k.json", findings_dir=findings, systems=["B0", "NH"]).exists()
     with pytest.raises(keyseal.SealError):  # plaintext != seal
         keyseal.reveal([{"file": "x"}], seal, tmp_path / "k2.json")
+
+
+def test_reveal_gate_rejects_malformed_findings(tmp_path):
+    findings = tmp_path / "findings"
+    findings.mkdir()
+    # a non-JSON / non-list / empty placeholder must NOT unlock the reveal (only existence-checked before)
+    (findings / "A.json").write_text("not json at all", encoding="utf-8")
+    assert keyseal.reveal_gate_ok(findings, ["A"]) is False
+    (findings / "A.json").write_text("{}", encoding="utf-8")            # JSON, but not the list shape
+    assert keyseal.reveal_gate_ok(findings, ["A"]) is False
+    (findings / "A.json").write_text("", encoding="utf-8")             # 0-byte
+    assert keyseal.reveal_gate_ok(findings, ["A"]) is False
+    (findings / "A.json").write_text("[]", encoding="utf-8")           # empty list = legit "found nothing"
+    assert keyseal.reveal_gate_ok(findings, ["A"]) is True
 
 
 def test_prereg_freeze_verify_drift(tmp_path):

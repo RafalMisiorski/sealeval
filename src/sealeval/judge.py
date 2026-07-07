@@ -1,9 +1,8 @@
 """Independent blind judge core.
 
-Refactor of the benchmark's per-claim Opus skeptic into a reusable, model-pluggable
-NH module. No ultracode/Workflow dependency: each claim is one synchronous LLM call
-via NH's own backends (Claude through opus_client; Gemini through call_gemini), so it
-runs headless from the CLI and in CI.
+A reusable, model-pluggable adjudicator: each claim is one synchronous LLM call through
+the ``judge_fn`` you supply (sealeval ships no backend), so it runs headless from the CLI
+and in CI against whatever model you wire in.
 """
 
 from __future__ import annotations
@@ -170,30 +169,6 @@ def _excerpt(path: Path, line: Optional[int], *, window: int = 60, max_full: int
 # ---------------------------------------------------------------------------
 
 
-def _judge_call(
-    system: str,
-    user: str,
-    model: str,
-    *,
-    timeout: int = 300,
-    cwd: Optional[str] = None,
-    purpose: str = "judge_claim",
-) -> str:
-    """Default (unconfigured) backend.
-
-    sealeval is dependency-free and ships no LLM client. The adjudication LOGIC lives
-    here (refute-by-default prompt, excerpt windowing, skeptical JSON parsing, the
-    GENUINE_BUG / REAL_NOT_BUG / REFUTED taxonomy, the calibration ledger); the LLM CALL
-    is yours to provide via ``judge_fn``. Reaching this function means no ``judge_fn``
-    was passed -> a clear error, not a silent fallback.
-    """
-    raise RuntimeError(
-        "sealeval ships no built-in LLM backend (zero deps by design). Pass a judge_fn to "
-        "judge_claims: a callable (system_prompt, user_prompt, model) -> str that calls YOUR "
-        "LLM/CLI and returns the judge's raw reply. See the README for a wiring example."
-    )
-
-
 def _parse_verdict(text: str) -> tuple[str, float, str]:
     """Parse the judge's JSON. Defaults to REFUTED (skeptical) on any garbage."""
     t = (text or "").strip()
@@ -247,15 +222,13 @@ def judge_claims(
     scope: Optional[str] = None,
     model: str = _DEFAULT_MODEL,
     judge_fn: Optional[Callable[[str, str, str], str]] = None,
-    cwd: Optional[str] = None,
-    purpose: str = "judge_claim",
 ) -> JudgeReport:
     """Judge each claim against its (in-scope) source file, blind to provenance.
 
-    The judge backend is run with cwd pinned to the scope root (override via
-    ``cwd``) so the agentic CLI reads the revision under review, not the live tree.
-    Pass a custom ``judge_fn(system, user, model)`` to stub the backend in tests.
-    ``purpose`` tags ledger rows for per-run/per-system cost attribution.
+    You supply the LLM call as ``judge_fn(system, user, model) -> str`` (sealeval ships no
+    backend). It is called once per claim with the refute-by-default system prompt and a
+    windowed code excerpt; anything the backend needs (its own cwd, timeouts, cost logging)
+    lives inside your ``judge_fn``.
     """
     root, allowed = load_scope(scope)
     if judge_fn is None:

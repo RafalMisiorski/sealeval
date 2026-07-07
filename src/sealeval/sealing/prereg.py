@@ -12,7 +12,7 @@ git history of the committed lock makes the change auditable).
     corpus            {relative_path: sha256} manifest of the sealed corpus
     injection_seal    the keyseal dict (hash commitment over the injection key)
     metrics           metric definitions + the cost formula reference
-    price_snapshot    a copy of opus_client._PRICE_PER_M_TOKENS at freeze time
+    price_snapshot    the caller's per-model token price table at freeze time (optional)
     shuffle_seed      RNG seed for the cross-system blinding shuffle
     mutation_config   {archetypes, per_file, seed, max_total}
     thresholds        {go_ratio, precision_rule, ...} GO/KILL/PARTIAL gates

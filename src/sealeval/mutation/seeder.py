@@ -148,7 +148,7 @@ def _mutate_one_file(
         for cand in pool:
             if cand.line in used_lines:
                 continue
-            original_segment = catalog._seg(current, cand.node) or ""
+            original_segment = catalog.source_segment(current, cand.node) or ""
             trial = catalog.replace_span(current, cand.node, cand.new_src)
             if trial == current:
                 continue

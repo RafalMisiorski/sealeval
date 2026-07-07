@@ -51,7 +51,9 @@ def _single_line(node: ast.AST) -> bool:
     return lo is not None and hi is not None and lo == hi
 
 
-def _seg(src: str, node: ast.AST) -> Optional[str]:
+def source_segment(src: str, node: ast.AST) -> Optional[str]:
+    """Public: exact source text of an AST node (``ast.get_source_segment``), or None.
+    Used by the seeder to record the original segment of each injection."""
     try:
         return ast.get_source_segment(src, node)
     except (ValueError, TypeError):  # pragma: no cover - defensive
@@ -86,7 +88,7 @@ def _off_by_one(tree: ast.AST, src: str) -> list[Candidate]:
             continue
         if not _single_line(node):
             continue
-        arg_segs = [_seg(src, a) for a in node.args]
+        arg_segs = [source_segment(src, a) for a in node.args]
         if any(s is None for s in arg_segs):
             continue
         # narrow the STOP bound, never the step: range(stop) -> arg0; range(start, stop[, step]) -> arg1.
@@ -108,7 +110,7 @@ def _inverted_condition(tree: ast.AST, src: str) -> list[Candidate]:
             continue
         if isinstance(test, ast.UnaryOp) and isinstance(test.op, ast.Not):
             continue  # avoid double-negation that reads as a no-op tell
-        seg = _seg(src, test)
+        seg = source_segment(src, test)
         if seg is None:
             continue
         out.append(
@@ -132,8 +134,8 @@ def _wrong_operator(tree: ast.AST, src: str) -> list[Candidate]:
             continue
         if _is_strlike(node.left) or _is_strlike(node.right):
             continue  # skip obvious string concat -> avoids a trivial TypeError tell
-        left = _seg(src, node.left)
-        right = _seg(src, node.right)
+        left = source_segment(src, node.left)
+        right = source_segment(src, node.right)
         if left is None or right is None:
             continue
         flipped = "-" if isinstance(node.op, ast.Add) else "+"
@@ -151,8 +153,8 @@ def _null_deref(tree: ast.AST, src: str) -> list[Candidate]:
             continue
         if not _single_line(node):
             continue
-        obj = _seg(src, node.func.value)
-        key = _seg(src, node.args[0])
+        obj = source_segment(src, node.func.value)
+        key = source_segment(src, node.args[0])
         if obj is None or key is None:
             continue
         new = f"{obj}.get({key})"

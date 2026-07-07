@@ -11,8 +11,8 @@ let systems flag findings -> reveal the key -> judge findings blind against the 
 ground truth. The integrity (you cannot move the key after seeing results) is what makes a
 verdict survive an adversarial reviewer.
 
-Harvested from the Neural Holding code-review benchmark; the adjudication logic is intact,
-the NH-specific LLM wiring is removed so you bring your own ``judge_fn``.
+Extracted from a real pre-registered code-review benchmark; the adjudication logic is intact,
+the original LLM wiring is removed so you bring your own ``judge_fn``.
 """
 
 from sealeval import judge, mutation, sealing

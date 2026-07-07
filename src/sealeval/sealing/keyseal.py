@@ -76,13 +76,26 @@ def read_seal(path: Path) -> dict:
 
 
 def reveal_gate_ok(findings_dir: Path, systems: Sequence[str]) -> bool:
-    """True only when every system has a ``findings/<system>.json`` on disk.
+    """True only when every system has committed a WELL-FORMED ``findings/<system>.json``.
 
-    This is the mechanical guarantee that no system can be (re-)run after the key
-    is exposed: reveal is blocked until all systems have committed their findings.
+    This is the mechanical guarantee that no system can be (re-)run after the key is
+    exposed: reveal is blocked until all systems have committed their findings. Each file
+    must exist AND parse as a JSON list (the documented ``[{id, file, line, claim}]`` shape)
+    — a missing, empty (0-byte), or non-JSON placeholder does NOT unlock the reveal. An
+    EMPTY list ``[]`` is accepted on purpose: "this system found nothing" is a legitimate
+    pre-reveal commitment, and requiring non-empty findings would only reward fabricating them.
     """
     findings_dir = Path(findings_dir)
-    return all((findings_dir / f"{s}.json").exists() for s in systems)
+    for s in systems:
+        p = findings_dir / f"{s}.json"
+        if not p.exists():
+            return False
+        try:
+            if not isinstance(json.loads(p.read_text(encoding="utf-8")), list):
+                return False
+        except (ValueError, OSError):
+            return False
+    return True
 
 
 def reveal(
