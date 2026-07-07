@@ -140,8 +140,13 @@ def test_judge_taxonomy_strip_and_scope(tmp_path):
         {"id": "c4", "file": "missing.py", "line": 1, "claim": "file gone"},
     ]
     rep = bj.judge_claims(claims, scope=str(tmp_path), judge_fn=_fake_judge)
-    assert (rep.genuine_bug, rep.real_not_bug, rep.refuted, rep.errored) == (1, 1, 1, 1)
-    assert rep.precision_genuine_bug == round(1 / 3, 3)
+    # c4 claims a NONEXISTENT file -> that is the SYSTEM hallucinating, so it counts as
+    # REFUTED and stays in the precision denominator (a reviewer inventing paths must be
+    # penalized, not excluded). `errored` is only for backend/infra failures.
+    assert (rep.genuine_bug, rep.real_not_bug, rep.refuted, rep.errored) == (1, 1, 2, 0)
+    assert rep.precision_genuine_bug == round(1 / 4, 3)
+    c4 = next(v for v in rep.verdicts if v.claim_id == "c4")
+    assert c4.verdict == "REFUTED" and c4.error == "file not found"
 
 
 def test_judge_requires_a_backend(tmp_path):

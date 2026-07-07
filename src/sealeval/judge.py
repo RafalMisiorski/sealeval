@@ -274,11 +274,15 @@ def judge_claims(
         file = claim.get("file", "")
         path = _resolve_file(file, root)
         if path is None:
-            errored += 1
+            # The SYSTEM's failure, not the harness's: a claim about a file that does not
+            # exist is a hallucination and MUST count against precision (REFUTED in counts),
+            # not vanish into `errored` (which would reward inventing paths). `errored` is
+            # reserved for backend/infrastructure failures below.
+            counts["REFUTED"] += 1
             verdicts.append(JudgeVerdict(cid, "REFUTED", 0.0, "", file=file, error="file not found"))
             continue
         if allowed is not None and str(path.resolve()) not in allowed:
-            errored += 1
+            counts["REFUTED"] += 1
             verdicts.append(JudgeVerdict(cid, "REFUTED", 0.0, "", file=file, error="file not in scope"))
             continue
         excerpt = _excerpt(path, claim.get("line"))
