@@ -1,0 +1,98 @@
+{
+  "total_injections": 24,
+  "arms": {
+    "fable5": {
+      "claims": 23,
+      "tp_claims": 18,
+      "precision": 0.783,
+      "recall": 0.75,
+      "injections_caught": [
+        "__init__.py:77",
+        "adapters.py:729",
+        "adapters.py:738",
+        "api.py:18",
+        "compat.py:48",
+        "cookies.py:516",
+        "exceptions.py:33",
+        "help.py:93",
+        "models.py:1017",
+        "models.py:1074",
+        "packages.py:19",
+        "sessions.py:324",
+        "sessions.py:787",
+        "status_codes.py:122",
+        "structures.py:130",
+        "structures.py:55",
+        "utils.py:338",
+        "utils.py:564"
+      ]
+    },
+    "gpt56sol": {
+      "claims": 25,
+      "tp_claims": 20,
+      "precision": 0.8,
+      "recall": 0.833,
+      "injections_caught": [
+        "__init__.py:77",
+        "adapters.py:729",
+        "adapters.py:738",
+        "api.py:18",
+        "compat.py:48",
+        "cookies.py:516",
+        "cookies.py:87",
+        "exceptions.py:33",
+        "help.py:93",
+        "models.py:1017",
+        "models.py:1074",
+        "models.py:1117",
+        "packages.py:19",
+        "sessions.py:324",
+        "sessions.py:787",
+        "status_codes.py:122",
+        "structures.py:130",
+        "structures.py:55",
+        "utils.py:338",
+        "utils.py:564"
+      ]
+    },
+    "union": {
+      "claims": 27,
+      "tp_claims": 20,
+      "precision": 0.741,
+      "recall": 0.833
+    }
+  },
+  "complementarity": {
+    "only_fable5": [],
+    "only_gpt56sol": [
+      "cookies.py:87",
+      "models.py:1117"
+    ]
+  },
+  "per_archetype": {
+    "inverted_condition": {
+      "total": 10,
+      "fable5": 10,
+      "gpt56sol": 10
+    },
+    "swallowed_exception": {
+      "total": 4,
+      "fable5": 2,
+      "gpt56sol": 3
+    },
+    "null_deref": {
+      "total": 5,
+      "fable5": 1,
+      "gpt56sol": 2
+    },
+    "wrong_operator": {
+      "total": 5,
+      "fable5": 5,
+      "gpt56sol": 5
+    }
+  },
+  "judge_disagreement_rate": 0.125,
+  "H1_two_sided_complementarity": false,
+  "H2_union_lift": false,
+  "decision": "KILL"
+}

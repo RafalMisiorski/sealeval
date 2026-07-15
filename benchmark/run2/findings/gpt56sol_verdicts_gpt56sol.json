@@ -1,0 +1,211 @@
+{
+  "judge_model": "gpt-5.6-sol",
+  "claims_judged": 25,
+  "genuine_bug": 25,
+  "real_not_bug": 0,
+  "refuted": 0,
+  "errored": 0,
+  "precision_genuine_bug": 1.0,
+  "verdicts": [
+    {
+      "claim_id": "gp1",
+      "verdict": "GENUINE_BUG",
+      "confidence": 0.99,
+      "mechanism": "`if not (major == 1)` applies `minor >= 21` to 2.x while skipping it for 1.x, causing false incompatibility warnings for urllib3 2.x and accepting pre-1.21 releases.",
+      "file": "__init__.py",
+      "error": null
+    },
+    {
+      "claim_id": "gp2",
+      "verdict": "GENUINE_BUG",
+      "confidence": 0.98,
+      "mechanism": "Outside TYPE_CHECKING, line 52 unconditionally returns True, so a PreparedRequest with request.url or request.method set to None is classified as _ValidatedRequest.",
+      "file": "_types.py",
+      "error": null
+    },
+    {
+      "claim_id": "gp3",
+      "verdict": "GENUINE_BUG",
+      "confidence": 0.99,
+      "mechanism": "When conn.urlopen raises a MaxRetryError whose reason matches none of the raising branches (including NewConnectionError), line 729 passes and line 748 reads the never-assigned local resp, causing UnboundLocalError.",
+      "file": "adapters.py",
+      "error": null
+    },
+    {
+      "claim_id": "gp4",
+      "verdict": "GENUINE_BUG",
+      "confidence": 0.99,
+      "mechanism": "In `except (_SSLError, _HTTPError)`, line 738 raises `SSLError` only when `e` is not `_SSLError`, so ordinary `_HTTPError` subclasses are mislabeled while actual urllib3 `_SSLError` reaches the bare `raise`.",
+      "file": "adapters.py",
+      "error": null
+    },
+    {
+      "claim_id": "gp5",
+      "verdict": "GENUINE_BUG",
+      "confidence": 0.99,
+      "mechanism": "Because TYPE_CHECKING is True during static analysis, `if not TYPE_CHECKING` skips importing `Unpack` and `_t`, leaving every annotation that uses them unresolved to type checkers.",
+      "file": "api.py",
+      "error": null
+    },
+    {
+      "claim_id": "gp6",
+      "verdict": "GENUINE_BUG",
+      "confidence": 0.99,
+      "mechanism": "For any 4xx response lacking WWW-Authenticate, r.headers.get(...) at line 291 returns None and line 293 unconditionally calls s_auth.lower(), raising AttributeError.",
+      "file": "auth.py",
+      "error": null
+    },
+    {
+      "claim_id": "gp7",
+      "verdict": "GENUINE_BUG",
+      "confidence": 0.99,
+      "mechanism": "For qop=\"auth-int, auth\", qop.split(\",\") yields [\"auth-int\", \" auth\"], so line 243 misses the valid auth token and line 248 aborts.",
+      "file": "auth.py",
+      "error": null
+    },
+    {
+      "claim_id": "gp8",
+      "verdict": "GENUINE_BUG",
+      "confidence": 0.99,
+      "mechanism": "At runtime TYPE_CHECKING is False, so line 48 enters `import chardet` and never calls the fallback resolver, raising ImportError when only charset_normalizer is installed.",
+      "file": "compat.py",
+      "error": null
+    },
+    {
+      "claim_id": "gp9",
+      "verdict": "GENUINE_BUG",
+      "confidence": 0.99,
+      "mechanism": "MockRequest.get_header accepts default but calls self._r.headers.get(name) without passing it, so an absent header returns None even when a non-None default was supplied.",
+      "file": "cookies.py",
+      "error": null
+    },
+    {
+      "claim_id": "gp10",
+      "verdict": "GENUINE_BUG",
+      "confidence": 0.99,
+      "mechanism": "MockResponse.getheaders calls self._headers.getheaders(name) without returning its value, so every invocation implicitly returns None.",
+      "file": "cookies.py",
+      "error": null
+    },
+    {
+      "claim_id": "gp11",
+      "verdict": "GENUINE_BUG",
+      "confidence": 0.99,
+      "mechanism": "The condition `cookie.domain in domains` returns True only upon a repeated non-None domain, while distinct domains are merely appended and ultimately return False.",
+      "file": "cookies.py",
+      "error": null
+    },
+    {
+      "claim_id": "gp12",
+      "verdict": "GENUINE_BUG",
+      "confidence": 1.0,
+      "mechanism": "Line 516 evaluates set(kwargs) + set(result), but sets do not support +, so every create_cookie call raises TypeError before validating or creating the cookie.",
+      "file": "cookies.py",
+      "error": null
+    },
+    {
+      "claim_id": "gp13",
+      "verdict": "GENUINE_BUG",
+      "confidence": 1.0,
+      "mechanism": "The negated guard makes line 34 execute when response is None (raising AttributeError) and when self.request is explicitly truthy (overwriting it with response.request).",
+      "file": "exceptions.py",
+      "error": null
+    },
+    {
+      "claim_id": "gp14",
+      "verdict": "GENUINE_BUG",
+      "confidence": 0.99,
+      "mechanism": "When the import fails OpenSSL is set to None, but `if not (OpenSSL)` enters the block and evaluates `OpenSSL.__version__`, raising AttributeError; successful imports skip metadata.",
+      "file": "help.py",
+      "error": null
+    },
+    {
+      "claim_id": "gp15",
+      "verdict": "GENUINE_BUG",
+      "confidence": 0.99,
+      "mechanism": "When `pending` is set for an incomplete line, line 1017 evaluates `(pending) - (chunk)`, and subtraction is unsupported for both `bytes` and `str`, so the next chunk raises `TypeError` instead of joining them.",
+      "file": "models.py",
+      "error": null
+    },
+    {
+      "claim_id": "gp16",
+      "verdict": "GENUINE_BUG",
+      "confidence": 0.99,
+      "mechanism": "Line 1074 tests `self.encoding is not None`, causing line 1075 to overwrite an explicit encoding, while a missing encoding bypasses detection and falls back to UTF-8 at line 1079.",
+      "file": "models.py",
+      "error": null
+    },
+    {
+      "claim_id": "gp17",
+      "verdict": "GENUINE_BUG",
+      "confidence": 0.99,
+      "mechanism": "Lines 1116\u20131117 catch and discard JSONDecodeError from the detected-encoding parse, then lines 1119\u20131120 retry via self.text instead of converting and raising RequestsJSONDecodeError immediately.",
+      "file": "models.py",
+      "error": null
+    },
+    {
+      "claim_id": "gp18",
+      "verdict": "GENUINE_BUG",
+      "confidence": 0.99,
+      "mechanism": "The `if not (mod == target or mod.startswith(f\"{target}.\"))` branch aliases every non-target `sys.modules` entry and excludes `target` and its submodules, exactly inverting the intended chardet traversal.",
+      "file": "packages.py",
+      "error": null
+    },
+    {
+      "claim_id": "gp19",
+      "verdict": "GENUINE_BUG",
+      "confidence": 0.99,
+      "mechanism": "Line 324 negates the entire presence-and-strip predicate, so line 327 retains Authorization exactly when should_strip_auth is true and otherwise attempts deletion even when the header is absent, causing KeyError.",
+      "file": "sessions.py",
+      "error": null
+    },
+    {
+      "claim_id": "gp20",
+      "verdict": "GENUINE_BUG",
+      "confidence": 1.0,
+      "mechanism": "Line 787 computes preferred_clock() + start, so two absolute timestamps are summed instead of calculating preferred_clock() - start, yielding an incorrect r.elapsed.",
+      "file": "sessions.py",
+      "error": null
+    },
+    {
+      "claim_id": "gp21",
+      "verdict": "GENUINE_BUG",
+      "confidence": 0.99,
+      "mechanism": "Line 122 applies the unsupported binary '-' operator to two str objects whenever __doc__ is non-None, so _init() raises TypeError during import.",
+      "file": "status_codes.py",
+      "error": null
+    },
+    {
+      "claim_id": "gp22",
+      "verdict": "GENUINE_BUG",
+      "confidence": 1.0,
+      "mechanism": "Lines 55\u201357 set `data = {}` precisely when `data is not None`, discarding supplied entries, while `None` reaches `self.update(data, **kwargs)` and causes `MutableMapping.update` to fail.",
+      "file": "structures.py",
+      "error": null
+    },
+    {
+      "claim_id": "gp23",
+      "verdict": "GENUINE_BUG",
+      "confidence": 0.99,
+      "mechanism": "LookupDict.get accepts default but line 130 calls self.__dict__.get(key) without passing it, so an absent key returns None instead of the caller-provided default.",
+      "file": "structures.py",
+      "error": null
+    },
+    {
+      "claim_id": "gp24",
+      "verdict": "GENUINE_BUG",
+      "confidence": 0.99,
+      "mechanism": "The `except BaseException` surrounding both `yield tmp_handler` and `os.replace(...)` deletes the temporary file and then `pass`es, so write or replacement failures are normally swallowed and the context exits successfully.",
+      "file": "utils.py",
+      "error": null
+    },
+    {
+      "claim_id": "gp25",
+      "verdict": "GENUINE_BUG",
+      "confidence": 0.99,
+      "mechanism": "Line 564 slices from idx - 1, so `charset=utf-8` yields `t=utf-8`, which line 584 returns as an invalid encoding name.",
+      "file": "utils.py",
+      "error": null
+    }
+  ]
+}

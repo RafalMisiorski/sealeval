@@ -1,0 +1,211 @@
+{
+  "judge_model": "claude-fable-5",
+  "claims_judged": 25,
+  "genuine_bug": 23,
+  "real_not_bug": 2,
+  "refuted": 0,
+  "errored": 0,
+  "precision_genuine_bug": 0.92,
+  "verdicts": [
+    {
+      "claim_id": "gp1",
+      "verdict": "GENUINE_BUG",
+      "confidence": 0.9,
+      "mechanism": "Line 77 `if not (major == 1): assert minor >= 21` applies the 1.x minimum-minor check to non-1 majors, so urllib3 2.0 (minor=0) trips the assert (surfacing as a spurious RequestsDependencyWarning via the except at line 118) while urllib3 1.20 skips the check entirely \u2014 the intended guard `if major == 1` is inverted.",
+      "file": "__init__.py",
+      "error": null
+    },
+    {
+      "claim_id": "gp2",
+      "verdict": "REAL_NOT_BUG",
+      "confidence": 0.75,
+      "mechanism": "Line 52 does return True unconditionally at runtime, but the comment 'noop at runtime to avoid AssertionError' and the TypeIs return type show this is an intentional static-narrowing-only guard, so the behavior is a documented design choice rather than a triggerable defect in this code.",
+      "file": "_types.py",
+      "error": null
+    },
+    {
+      "claim_id": "gp3",
+      "verdict": "GENUINE_BUG",
+      "confidence": 0.95,
+      "mechanism": "The `except MaxRetryError` handler ends with `pass` (line 729) instead of raising ConnectionError, so a MaxRetryError whose reason is e.g. NewConnectionError or any unmatched type is swallowed and execution falls through to `self.build_response(request, resp)` at line 748 with `resp` never assigned, raising UnboundLocalError.",
+      "file": "adapters.py",
+      "error": null
+    },
+    {
+      "claim_id": "gp4",
+      "verdict": "GENUINE_BUG",
+      "confidence": 0.97,
+      "mechanism": "Line 738's `if not (isinstance(e, _SSLError))` inverts the check, so any non-SSL _HTTPError (including ReadTimeoutError/_InvalidHeader, which never reach their now-dead elif branches) is raised as SSLError, while an actual _SSLError skips to the `else: raise` at line 746 and propagates as the raw urllib3 exception.",
+      "file": "adapters.py",
+      "error": null
+    },
+    {
+      "claim_id": "gp5",
+      "verdict": "GENUINE_BUG",
+      "confidence": 0.85,
+      "mechanism": "Line 18 `if not (TYPE_CHECKING):` inverts the standard guard, so type checkers (which treat TYPE_CHECKING as True) skip the block and see `_t`/`Unpack` as undefined in every signature, while runtime now unconditionally imports typing_extensions/_t \u2014 exactly the claimed inversion.",
+      "file": "api.py",
+      "error": null
+    },
+    {
+      "claim_id": "gp6",
+      "verdict": "GENUINE_BUG",
+      "confidence": 0.93,
+      "mechanism": "Line 291 `s_auth = r.headers.get(\"www-authenticate\")` has no default, so any 4xx response lacking the header (e.g., a plain 404, which passes the `400 <= status < 500` gate at line 282) makes s_auth None and line 293's `s_auth.lower()` raises AttributeError.",
+      "file": "auth.py",
+      "error": null
+    },
+    {
+      "claim_id": "gp7",
+      "verdict": "GENUINE_BUG",
+      "confidence": 0.85,
+      "mechanism": "Line 243's `\"auth\" in qop.split(\",\")` yields [\"auth-int\", \" auth\"] for qop=\"auth-int, auth\" (RFC-legal OWS after comma), so neither branch matches and line 248 returns None, aborting digest auth.",
+      "file": "auth.py",
+      "error": null
+    },
+    {
+      "claim_id": "gp8",
+      "verdict": "GENUINE_BUG",
+      "confidence": 0.97,
+      "mechanism": "At runtime TYPE_CHECKING is False so `if not (TYPE_CHECKING)` executes `import chardet` (line 49), raising ImportError when only charset_normalizer is installed, while the fallback `_resolve_char_detection()` runs only under type-checking \u2014 the inverse of the intended logic.",
+      "file": "compat.py",
+      "error": null
+    },
+    {
+      "claim_id": "gp9",
+      "verdict": "GENUINE_BUG",
+      "confidence": 0.85,
+      "mechanism": "Line 87 returns `self._r.headers.get(name)` and drops the `default` parameter entirely, so http.cookiejar callers like request_host that invoke get_header('Host', '') get None instead of '' and then crash on host.lower() when the header is absent.",
+      "file": "cookies.py",
+      "error": null
+    },
+    {
+      "claim_id": "gp10",
+      "verdict": "REAL_NOT_BUG",
+      "confidence": 0.85,
+      "mechanism": "Line 132 `self._headers.getheaders(name)` indeed lacks a return so the method always yields None, but under Python 3 http.cookiejar only calls `info().get_all(...)`, never `getheaders`, so the dead method's missing return is latent rather than a triggerable defect.",
+      "file": "cookies.py",
+      "error": null
+    },
+    {
+      "claim_id": "gp11",
+      "verdict": "GENUINE_BUG",
+      "confidence": 0.7,
+      "mechanism": "Lines 325-329 return True when a domain reappears (e.g., two cookies on one domain \u2192 True despite a single domain) and fall through to False when every cookie's domain is distinct (two one-cookie domains \u2192 False), contradicting the docstring in both directions \u2014 though note this logic is byte-identical to upstream requests' cookies.py, so it is an inherited upstream defect, not a local mutation.",
+      "file": "cookies.py",
+      "error": null
+    },
+    {
+      "claim_id": "gp12",
+      "verdict": "GENUINE_BUG",
+      "confidence": 0.97,
+      "mechanism": "Line 516 `badargs = (set(kwargs)) + (set(result))` applies `+` to two sets, which Python does not support (should be `-` for difference), so every create_cookie call raises TypeError unconditionally before any validation occurs.",
+      "file": "cookies.py",
+      "error": null
+    },
+    {
+      "claim_id": "gp13",
+      "verdict": "GENUINE_BUG",
+      "confidence": 0.98,
+      "mechanism": "The `not (...)` at line 33 negates the intended guard, so a plain `RequestException()` (response=None) reaches line 34 and raises AttributeError on `None.request`, and an explicitly passed request is clobbered whenever a response is present.",
+      "file": "exceptions.py",
+      "error": null
+    },
+    {
+      "claim_id": "gp14",
+      "verdict": "GENUINE_BUG",
+      "confidence": 0.97,
+      "mechanism": "Line 93 `if not (OpenSSL):` enters the block precisely when OpenSSL is None (pyopenssl import failed), so line 95 `OpenSSL.__version__` raises AttributeError on None, while a successful import skips the metadata \u2014 the correct guard is `if OpenSSL:`.",
+      "file": "help.py",
+      "error": null
+    },
+    {
+      "claim_id": "gp15",
+      "verdict": "GENUINE_BUG",
+      "confidence": 0.97,
+      "mechanism": "Line 1017 computes `(pending) - (chunk)` \u2014 the `-` operator is unsupported for str/bytes, so a TypeError is raised whenever `pending` is non-None (a line spanning two chunks), where concatenation `pending + chunk` is required.",
+      "file": "models.py",
+      "error": null
+    },
+    {
+      "claim_id": "gp16",
+      "verdict": "GENUINE_BUG",
+      "confidence": 0.95,
+      "mechanism": "Line 1074 `if not (self.encoding is None): encoding = self.apparent_encoding` overwrites an explicitly-set encoding with apparent_encoding and skips auto-detection when encoding is None \u2014 the inverse of the intended `if self.encoding is None` fallback.",
+      "file": "models.py",
+      "error": null
+    },
+    {
+      "claim_id": "gp17",
+      "verdict": "GENUINE_BUG",
+      "confidence": 0.75,
+      "mechanism": "Line 1116-1117 `except JSONDecodeError as e: pass` swallows the parse error and falls through to re-parse `self.text` (decoded with errors='replace' and possibly the wrong codec), so for e.g. BOM-marked UTF-16 invalid-JSON bodies the eventual RequestsJSONDecodeError carries doc/pos computed against mojibake instead of raising immediately with the correctly-decoded content as upstream does.",
+      "file": "models.py",
+      "error": null
+    },
+    {
+      "claim_id": "gp18",
+      "verdict": "GENUINE_BUG",
+      "confidence": 0.93,
+      "mechanism": "Line 19's `if not (mod == target or mod.startswith(f\"{target}.\"))` executes the aliasing body for every module EXCEPT chardet ones, so `requests.packages.chardet` is never created while all unrelated sys.modules entries get spurious `requests.packages.*` aliases \u2014 the inverse of the intended compat shim (upstream requests uses the non-negated condition).",
+      "file": "packages.py",
+      "error": null
+    },
+    {
+      "claim_id": "gp19",
+      "verdict": "GENUINE_BUG",
+      "confidence": 0.97,
+      "mechanism": "Line 324's `if not (\"Authorization\" in headers and self.should_strip_auth(...))` inverts the intended guard, so `del headers[\"Authorization\"]` on line 327 raises KeyError whenever the header is absent and strips auth on same-host redirects, while cross-host redirects that should strip credentials keep the Authorization header.",
+      "file": "sessions.py",
+      "error": null
+    },
+    {
+      "claim_id": "gp20",
+      "verdict": "GENUINE_BUG",
+      "confidence": 0.98,
+      "mechanism": "Line 787 computes `elapsed = (preferred_clock()) + (start)`, adding the start timestamp to the end timestamp instead of subtracting, so r.elapsed becomes a huge bogus duration (~2x wall-clock epoch/monotonic value) instead of the request time.",
+      "file": "sessions.py",
+      "error": null
+    },
+    {
+      "claim_id": "gp21",
+      "verdict": "GENUINE_BUG",
+      "confidence": 0.97,
+      "mechanism": "Line 122 evaluates `(__doc__ + \"\\n\") - (\"\\n\".join(...))` \u2014 the `-` operator is unsupported between str operands, and since the module has a non-None docstring (lines 1-19), _init() at line 128 raises TypeError at import time.",
+      "file": "status_codes.py",
+      "error": null
+    },
+    {
+      "claim_id": "gp22",
+      "verdict": "GENUINE_BUG",
+      "confidence": 0.97,
+      "mechanism": "Lines 55-56 `if not (data is None): data = {}` overwrite any supplied mapping with an empty dict (so `CaseInsensitiveDict({'A': 1})` is silently empty), while `data=None` falls through to `self.update(None, **kwargs)`, which raises TypeError since MutableMapping.update iterates its argument.",
+      "file": "structures.py",
+      "error": null
+    },
+    {
+      "claim_id": "gp23",
+      "verdict": "GENUINE_BUG",
+      "confidence": 0.97,
+      "mechanism": "Line 130 `return self.__dict__.get(key)` never passes the `default` parameter through, so `get(key, default)` returns None instead of the caller-provided default for absent keys.",
+      "file": "structures.py",
+      "error": null
+    },
+    {
+      "claim_id": "gp24",
+      "verdict": "GENUINE_BUG",
+      "confidence": 0.95,
+      "mechanism": "The `except BaseException:` block at lines 336-338 does `os.remove(tmp_name)` then `pass` with no re-raise, and because a @contextlib.contextmanager generator that swallows an exception thrown in at `yield` causes __exit__ to return True, any failure during the caller's write or during os.replace is silently suppressed \u2014 the caller's with-block completes as if the file was written.",
+      "file": "utils.py",
+      "error": null
+    },
+    {
+      "claim_id": "gp25",
+      "verdict": "GENUINE_BUG",
+      "confidence": 0.98,
+      "mechanism": "Line 564 `value = param[(idx) - (1):]` slices from one char before '=' instead of after it, so for `charset=utf-8` (idx=7) the value becomes `t=utf-8`, corrupting every parsed parameter value used by get_encoding_from_headers.",
+      "file": "utils.py",
+      "error": null
+    }
+  ]
+}

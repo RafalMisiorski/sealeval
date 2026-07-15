@@ -1,0 +1,195 @@
+{
+  "judge_model": "gpt-5.6-sol",
+  "claims_judged": 23,
+  "genuine_bug": 22,
+  "real_not_bug": 0,
+  "refuted": 1,
+  "errored": 0,
+  "precision_genuine_bug": 0.957,
+  "verdicts": [
+    {
+      "claim_id": "fa1",
+      "verdict": "GENUINE_BUG",
+      "confidence": 0.99,
+      "mechanism": "Lines 76\u201378 require `major >= 1` but apply `minor >= 21` only when `major != 1`, allowing urllib3 1.20 while rejecting 2.0.7.",
+      "file": "__init__.py",
+      "error": null
+    },
+    {
+      "claim_id": "fa2",
+      "verdict": "GENUINE_BUG",
+      "confidence": 0.99,
+      "mechanism": "At runtime TYPE_CHECKING is False, so is_prepared returns True even when request.url or request.method is None, unsafely narrowing an unprepared request to _ValidatedRequest.",
+      "file": "_types.py",
+      "error": null
+    },
+    {
+      "claim_id": "fa3",
+      "verdict": "GENUINE_BUG",
+      "confidence": 0.99,
+      "mechanism": "For a MaxRetryError whose reason matches none of the raising branches\u2014such as NewConnectionError\u2014the `pass` at line 729 falls through with `resp` never assigned, so line 748 raises UnboundLocalError instead of ConnectionError.",
+      "file": "adapters.py",
+      "error": null
+    },
+    {
+      "claim_id": "fa4",
+      "verdict": "GENUINE_BUG",
+      "confidence": 0.99,
+      "mechanism": "Because the broad `except (_SSLError, _HTTPError)` immediately maps every non-`_SSLError` (including `ReadTimeoutError`) to `SSLError`, its later timeout/header branches are unreachable for those errors while actual `_SSLError` values fall through to raw re-raise.",
+      "file": "adapters.py",
+      "error": null
+    },
+    {
+      "claim_id": "fa5",
+      "verdict": "GENUINE_BUG",
+      "confidence": 0.99,
+      "mechanism": "Because TYPE_CHECKING is False at runtime and treated as True by type checkers, lines 18\u201321 perform Unpack/_t imports only at runtime while hiding them from static analysis.",
+      "file": "api.py",
+      "error": null
+    },
+    {
+      "claim_id": "fa6",
+      "verdict": "GENUINE_BUG",
+      "confidence": 0.99,
+      "mechanism": "For any 4xx response without WWW-Authenticate, line 291 assigns None to s_auth and line 293 unconditionally calls s_auth.lower(), raising AttributeError.",
+      "file": "auth.py",
+      "error": null
+    },
+    {
+      "claim_id": "fa7",
+      "verdict": "GENUINE_BUG",
+      "confidence": 0.99,
+      "mechanism": "Because TYPE_CHECKING is False at runtime, line 48 selects the unconditional `import chardet` on line 49, so missing chardet raises ImportError and `_resolve_char_detection()` never tries `charset_normalizer`.",
+      "file": "compat.py",
+      "error": null
+    },
+    {
+      "claim_id": "fa8",
+      "verdict": "GENUINE_BUG",
+      "confidence": 0.99,
+      "mechanism": "Line 87 calls self._r.headers.get(name) without passing default, so get_header(\"missing\", \"fallback\") returns None instead of \"fallback\".",
+      "file": "cookies.py",
+      "error": null
+    },
+    {
+      "claim_id": "fa9",
+      "verdict": "GENUINE_BUG",
+      "confidence": 0.99,
+      "mechanism": "MockResponse.getheaders() calls self._headers.getheaders(name) without returning it, so every invocation implicitly returns None.",
+      "file": "cookies.py",
+      "error": null
+    },
+    {
+      "claim_id": "fa10",
+      "verdict": "GENUINE_BUG",
+      "confidence": 1.0,
+      "mechanism": "Line 516 evaluates `set(kwargs) + set(result)`, but sets do not support `+`, so every `create_cookie()` call raises `TypeError` before validation or cookie creation.",
+      "file": "cookies.py",
+      "error": null
+    },
+    {
+      "claim_id": "fa11",
+      "verdict": "REFUTED",
+      "confidence": 0.98,
+      "mechanism": "Although line 539 leaves expires=None, create_cookie always fails first at line 516 because Python sets do not support '+', so no session cookie is produced.",
+      "file": "cookies.py",
+      "error": null
+    },
+    {
+      "claim_id": "fa12",
+      "verdict": "GENUINE_BUG",
+      "confidence": 0.99,
+      "mechanism": "When response is None, the negated condition on line 33 evaluates true, so line 34 dereferences None as response.request and raises AttributeError.",
+      "file": "exceptions.py",
+      "error": null
+    },
+    {
+      "claim_id": "fa13",
+      "verdict": "GENUINE_BUG",
+      "confidence": 0.99,
+      "mechanism": "When the pyOpenSSL import fails, OpenSSL is set to None at line 28, so `if not (OpenSSL)` is true and line 95 dereferences `None.__version__`, while a successful import makes the condition false and leaves version data unpopulated.",
+      "file": "help.py",
+      "error": null
+    },
+    {
+      "claim_id": "fa14",
+      "verdict": "GENUINE_BUG",
+      "confidence": 0.99,
+      "mechanism": "When a partial line sets pending at line 1025, the next iteration executes `pending - chunk` at line 1017, and subtraction is unsupported for both `str` and `bytes`, raising TypeError.",
+      "file": "models.py",
+      "error": null
+    },
+    {
+      "claim_id": "fa15",
+      "verdict": "GENUINE_BUG",
+      "confidence": 0.99,
+      "mechanism": "At lines 1074\u20131075, `if not (self.encoding is None)` runs only when an encoding is already set and overwrites it with `self.apparent_encoding`, while leaving `encoding` as `None` when auto-detection is actually needed.",
+      "file": "models.py",
+      "error": null
+    },
+    {
+      "claim_id": "fa16",
+      "verdict": "GENUINE_BUG",
+      "confidence": 0.99,
+      "mechanism": "Line 19 enters the aliasing block only when `mod` is neither `target` nor a `target.*` submodule, so the intended chardet-compatible modules are skipped while unrelated loaded modules are aliased.",
+      "file": "packages.py",
+      "error": null
+    },
+    {
+      "claim_id": "fa17",
+      "verdict": "GENUINE_BUG",
+      "confidence": 0.99,
+      "mechanism": "Line 324 enters deletion unless both Authorization exists and should_strip_auth is true, causing KeyError when absent and retaining credentials when cross-host stripping is required.",
+      "file": "sessions.py",
+      "error": null
+    },
+    {
+      "claim_id": "fa18",
+      "verdict": "GENUINE_BUG",
+      "confidence": 0.99,
+      "mechanism": "Line 787 adds the post-send clock reading to `start`, so every completed `send()` assigns an inflated `r.elapsed` instead of the actual duration obtained by subtraction.",
+      "file": "sessions.py",
+      "error": null
+    },
+    {
+      "claim_id": "fa19",
+      "verdict": "GENUINE_BUG",
+      "confidence": 1.0,
+      "mechanism": "At module import, _init() executes line 122 and subtracts one str from another via (__doc__ + \"\\n\") - \"\\n\".join(...), which raises TypeError.",
+      "file": "status_codes.py",
+      "error": null
+    },
+    {
+      "claim_id": "fa20",
+      "verdict": "GENUINE_BUG",
+      "confidence": 0.99,
+      "mechanism": "Lines 55\u201357 replace every non-None data argument with {} and pass None unchanged to MutableMapping.update, causing construction both to discard supplied entries and to raise TypeError when data is omitted.",
+      "file": "structures.py",
+      "error": null
+    },
+    {
+      "claim_id": "fa21",
+      "verdict": "GENUINE_BUG",
+      "confidence": 0.99,
+      "mechanism": "LookupDict.get accepts default but line 130 calls self.__dict__.get(key) without it, so any missing key returns None instead of the caller-supplied default.",
+      "file": "structures.py",
+      "error": null
+    },
+    {
+      "claim_id": "fa22",
+      "verdict": "GENUINE_BUG",
+      "confidence": 0.99,
+      "mechanism": "The `except BaseException` around `yield tmp_handler` deletes the temporary file and then executes `pass`, suppressing write or replacement exceptions and making the context manager exit successfully without updating the target.",
+      "file": "utils.py",
+      "error": null
+    },
+    {
+      "claim_id": "fa23",
+      "verdict": "GENUINE_BUG",
+      "confidence": 0.999,
+      "mechanism": "Line 564 slices from idx-1, so `charset=utf-8` stores `charset: t=utf-8`, and line 584 returns that malformed encoding.",
+      "file": "utils.py",
+      "error": null
+    }
+  ]
+}
