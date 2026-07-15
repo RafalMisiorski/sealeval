@@ -1,0 +1,1 @@
+[{"line": 48, "claim": "The TYPE_CHECKING condition is inverted — `if not (TYPE_CHECKING)` executes `import chardet` unconditionally at runtime, raising ImportError when chardet is not installed, while the graceful `_resolve_char_detection()` fallback (which also tries charset_normalizer) only runs during static type checking."}]

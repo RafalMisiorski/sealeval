@@ -1,0 +1,1 @@
+[{"line":18,"claim":"The TYPE_CHECKING condition is inverted, so the annotation-only imports are hidden from static type checkers and performed only at runtime."}]

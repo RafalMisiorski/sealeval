@@ -1,0 +1,1 @@
+[{"line": 18, "claim": "The condition `if not (TYPE_CHECKING):` is inverted — the type-only imports (`Unpack`, `_types`) should be guarded by `if TYPE_CHECKING:`, so as written they execute at runtime (risking an ImportError on `typing_extensions`) while being invisible to type checkers, which is the opposite of the intended behavior."}]

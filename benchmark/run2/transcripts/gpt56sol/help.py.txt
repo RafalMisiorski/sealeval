@@ -1,0 +1,1 @@
+[{"line":93,"claim":"The condition is inverted: it enters the pyOpenSSL metadata block only when OpenSSL is falsy, then dereferences None at line 95, while skipping metadata when OpenSSL is available."}]

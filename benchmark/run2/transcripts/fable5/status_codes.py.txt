@@ -1,0 +1,1 @@
+[{"line": 122, "claim": "The docstring is combined with the `-` operator instead of `+` (`(__doc__ + \"\\n\") - (\"\\n\".join(...))`), which raises TypeError at import time since strings do not support subtraction."}]

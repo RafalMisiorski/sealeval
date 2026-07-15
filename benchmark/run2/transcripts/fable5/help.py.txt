@@ -1,0 +1,1 @@
+[{"line": 93, "claim": "The condition `if not (OpenSSL)` is inverted — it enters the block precisely when OpenSSL is None (import failed), causing an AttributeError on `OpenSSL.__version__` at line 95, and skips populating pyopenssl_info when OpenSSL is actually available."}]

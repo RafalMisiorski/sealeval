@@ -1,0 +1,1 @@
+[{"line": 49, "claim": "The validation in is_prepared is placed under `if TYPE_CHECKING:`, which is always False at runtime, so the function unconditionally returns True (line 52) and never actually checks that url and method are non-None — the type guard falsely narrows unprepared requests, enabling downstream None dereferences."}]

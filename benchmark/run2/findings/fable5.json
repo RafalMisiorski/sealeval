@@ -1,0 +1,140 @@
+[
+  {
+    "id": "fa1",
+    "file": "__init__.py",
+    "line": 77,
+    "claim": "The condition is inverted: the comment says urllib3 >= 1.21.1 must be enforced, but `if not (major == 1)` asserts minor >= 21 only when major != 1, so urllib3 1.20 wrongly passes while urllib3 2.x (e.g. 2.0.7) wrongly fails the compatibility check."
+  },
+  {
+    "id": "fa2",
+    "file": "_types.py",
+    "line": 49,
+    "claim": "The validation in is_prepared is placed under `if TYPE_CHECKING:`, which is always False at runtime, so the function unconditionally returns True (line 52) and never actually checks that url and method are non-None \u2014 the type guard falsely narrows unprepared requests, enabling downstream None dereferences."
+  },
+  {
+    "id": "fa3",
+    "file": "adapters.py",
+    "line": 729,
+    "claim": "The MaxRetryError handler ends with `pass` instead of raising ConnectionError, so unhandled retry-exhaustion errors (e.g. plain connection refusal) are silently swallowed and execution falls through to `build_response(request, resp)` where `resp` is unbound, causing an UnboundLocalError instead of a proper ConnectionError."
+  },
+  {
+    "id": "fa4",
+    "file": "adapters.py",
+    "line": 738,
+    "claim": "Inverted condition: `if not (isinstance(e, _SSLError))` raises SSLError for non-SSL errors (e.g. a ReadTimeoutError would be wrongly reported as SSLError before the elif is reached), while actual _SSLError instances skip the SSLError branch, fall through the ReadTimeout/InvalidHeader elifs, and are re-raised as the raw urllib3 exception."
+  },
+  {
+    "id": "fa5",
+    "file": "api.py",
+    "line": 18,
+    "claim": "The condition `if not (TYPE_CHECKING):` is inverted \u2014 the type-only imports (`Unpack`, `_types`) should be guarded by `if TYPE_CHECKING:`, so as written they execute at runtime (risking an ImportError on `typing_extensions`) while being invisible to type checkers, which is the opposite of the intended behavior."
+  },
+  {
+    "id": "fa6",
+    "file": "auth.py",
+    "line": 293,
+    "claim": "s_auth is obtained via r.headers.get(\"www-authenticate\") with no default (line 291), so on a 4xx response lacking the WWW-Authenticate header s_auth is None and s_auth.lower() raises AttributeError instead of returning the response."
+  },
+  {
+    "id": "fa7",
+    "file": "compat.py",
+    "line": 48,
+    "claim": "The TYPE_CHECKING condition is inverted \u2014 `if not (TYPE_CHECKING)` executes `import chardet` unconditionally at runtime, raising ImportError when chardet is not installed, while the graceful `_resolve_char_detection()` fallback (which also tries charset_normalizer) only runs during static type checking."
+  },
+  {
+    "id": "fa8",
+    "file": "cookies.py",
+    "line": 87,
+    "claim": "get_header() ignores its `default` parameter and always calls headers.get(name) without it, so the supplied default is never returned for missing headers."
+  },
+  {
+    "id": "fa9",
+    "file": "cookies.py",
+    "line": 132,
+    "claim": "getheaders() is missing a `return` \u2014 it computes self._headers.getheaders(name) but discards the result, so the method always returns None."
+  },
+  {
+    "id": "fa10",
+    "file": "cookies.py",
+    "line": 516,
+    "claim": "Uses `+` between two sets (TypeError: unsupported operand) instead of set difference `set(kwargs) - set(result)`, so create_cookie() always crashes and can never validate kwargs."
+  },
+  {
+    "id": "fa11",
+    "file": "cookies.py",
+    "line": 539,
+    "claim": "The ValueError from an invalid non-integer max-age is silently swallowed with `pass`, leaving expires=None so a bad max-age silently produces a session cookie instead of raising an error."
+  },
+  {
+    "id": "fa12",
+    "file": "exceptions.py",
+    "line": 33,
+    "claim": "The condition is inverted with `not (...)`: the original guard should assign `self.request = response.request` only when response is not None, request is unset, and response has a request attribute, but as written the body executes in the opposite cases \u2014 including when `response` is None, causing an AttributeError on `response.request` (line 34) for the common case of raising RequestException wit"
+  },
+  {
+    "id": "fa13",
+    "file": "help.py",
+    "line": 93,
+    "claim": "The condition `if not (OpenSSL)` is inverted \u2014 it enters the block precisely when OpenSSL is None (import failed), causing an AttributeError on `OpenSSL.__version__` at line 95, and skips populating pyopenssl_info when OpenSSL is actually available."
+  },
+  {
+    "id": "fa14",
+    "file": "models.py",
+    "line": 1017,
+    "claim": "iter_lines uses subtraction `(pending) - (chunk)` instead of concatenation `pending + chunk`, which raises TypeError at runtime whenever a pending partial line must be joined with the next chunk."
+  },
+  {
+    "id": "fa15",
+    "file": "models.py",
+    "line": 1074,
+    "claim": "Inverted condition `if not (self.encoding is None)` replaces an explicitly-set encoding with apparent_encoding and skips auto-detection when encoding is None (the opposite of the intended fallback), so a user-set encoding is ignored and unset encodings never get detected."
+  },
+  {
+    "id": "fa16",
+    "file": "packages.py",
+    "line": 19,
+    "claim": "The condition is inverted with `not` \u2014 it aliases every module EXCEPT the chardet-compatible package under `requests.packages.*`, while skipping the chardet modules it was meant to alias."
+  },
+  {
+    "id": "fa17",
+    "file": "sessions.py",
+    "line": 324,
+    "claim": "The auth-strip condition is inverted with `not (...)`, so the Authorization header is deleted precisely when it should be kept (and raises KeyError when absent) while credentials are leaked on cross-host redirects where stripping is required."
+  },
+  {
+    "id": "fa18",
+    "file": "sessions.py",
+    "line": 787,
+    "claim": "Elapsed time is computed as `preferred_clock() + start` instead of `preferred_clock() - start`, producing a wildly wrong r.elapsed value."
+  },
+  {
+    "id": "fa19",
+    "file": "status_codes.py",
+    "line": 122,
+    "claim": "The docstring is combined with the `-` operator instead of `+` (`(__doc__ + \"\\n\") - (\"\\n\".join(...))`), which raises TypeError at import time since strings do not support subtraction."
+  },
+  {
+    "id": "fa20",
+    "file": "structures.py",
+    "line": 55,
+    "claim": "The None-check is inverted (`if not (data is None)`), so any provided data is discarded and replaced with an empty dict, while a None value is passed through to `self.update(None)`, which raises TypeError."
+  },
+  {
+    "id": "fa21",
+    "file": "structures.py",
+    "line": 130,
+    "claim": "The `get` implementation ignores its `default` parameter, calling `self.__dict__.get(key)` without passing `default`, so a caller-supplied default is never returned."
+  },
+  {
+    "id": "fa22",
+    "file": "utils.py",
+    "line": 338,
+    "claim": "In atomic_open, the except block uses `pass` instead of re-raising, so any exception during the write is silently swallowed and the context manager exits successfully even though the target file was never written (upstream code has `raise` here)."
+  },
+  {
+    "id": "fa23",
+    "file": "utils.py",
+    "line": 564,
+    "claim": "In _parse_content_type_header, the parameter value is sliced as `param[(idx) - (1):]` instead of `param[idx + 1:]`, so the value wrongly includes the character before '=' and the '=' itself (e.g. 'charset=utf-8' yields 't=utf-8'), breaking charset extraction in get_encoding_from_headers."
+  }
+]

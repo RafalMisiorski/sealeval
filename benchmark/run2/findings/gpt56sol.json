@@ -1,0 +1,152 @@
+[
+  {
+    "id": "gp1",
+    "file": "__init__.py",
+    "line": 77,
+    "claim": "The condition is inverted: the minimum minor-version check runs for urllib3 major versions other than 1, rejecting supported urllib3 2.x while failing to reject urllib3 1.x versions below 1.21."
+  },
+  {
+    "id": "gp2",
+    "file": "_types.py",
+    "line": 52,
+    "claim": "is_prepared returns True for every request at runtime, so requests with a None URL or method are incorrectly accepted as fully prepared."
+  },
+  {
+    "id": "gp3",
+    "file": "adapters.py",
+    "line": 729,
+    "claim": "An unrecognized MaxRetryError is swallowed, leaving resp unassigned and causing UnboundLocalError at the final response build."
+  },
+  {
+    "id": "gp4",
+    "file": "adapters.py",
+    "line": 738,
+    "claim": "The inverted SSL type check misclassifies non-SSL HTTP errors as SSLError and lets urllib3 SSLError escape untranslated."
+  },
+  {
+    "id": "gp5",
+    "file": "api.py",
+    "line": 18,
+    "claim": "The TYPE_CHECKING condition is inverted, so the annotation-only imports are hidden from static type checkers and performed only at runtime."
+  },
+  {
+    "id": "gp6",
+    "file": "auth.py",
+    "line": 293,
+    "claim": "A 4xx response without a WWW-Authenticate header makes s_auth None, so calling s_auth.lower() raises AttributeError."
+  },
+  {
+    "id": "gp7",
+    "file": "auth.py",
+    "line": 243,
+    "claim": "The qop token list is split without trimming whitespace, so a valid value such as \"auth-int, auth\" fails to recognize auth and aborts digest authentication."
+  },
+  {
+    "id": "gp8",
+    "file": "compat.py",
+    "line": 48,
+    "claim": "The TYPE_CHECKING condition is inverted, so runtime code imports chardet directly instead of calling _resolve_char_detection(), causing import failure when only charset_normalizer is installed."
+  },
+  {
+    "id": "gp9",
+    "file": "cookies.py",
+    "line": 87,
+    "claim": "get_header ignores its default argument, returning None instead of the supplied default when the header is absent."
+  },
+  {
+    "id": "gp10",
+    "file": "cookies.py",
+    "line": 132,
+    "claim": "getheaders discards the underlying getheaders result and therefore always returns None."
+  },
+  {
+    "id": "gp11",
+    "file": "cookies.py",
+    "line": 326,
+    "claim": "multiple_domains returns True when a domain is repeated and False for distinct domains, inverting its stated purpose."
+  },
+  {
+    "id": "gp12",
+    "file": "cookies.py",
+    "line": 516,
+    "claim": "Using + between two sets always raises TypeError, so create_cookie fails on every call instead of checking for unexpected keyword arguments."
+  },
+  {
+    "id": "gp13",
+    "file": "exceptions.py",
+    "line": 33,
+    "claim": "The condition is inverted, causing line 34 to dereference `response` when it is `None` and to overwrite an explicitly supplied request."
+  },
+  {
+    "id": "gp14",
+    "file": "help.py",
+    "line": 93,
+    "claim": "The condition is inverted: it enters the pyOpenSSL metadata block only when OpenSSL is falsy, then dereferences None at line 95, while skipping metadata when OpenSSL is available."
+  },
+  {
+    "id": "gp15",
+    "file": "models.py",
+    "line": 1017,
+    "claim": "Pending line data is subtracted from the next chunk instead of concatenated, causing a TypeError when a line spans chunks."
+  },
+  {
+    "id": "gp16",
+    "file": "models.py",
+    "line": 1074,
+    "claim": "The encoding fallback condition is inverted, so an explicit response encoding is replaced by apparent_encoding while missing encodings are not auto-detected."
+  },
+  {
+    "id": "gp17",
+    "file": "models.py",
+    "line": 1117,
+    "claim": "A JSONDecodeError from parsing with the detected JSON encoding is swallowed, causing an incorrect retry through self.text instead of immediately raising RequestsJSONDecodeError."
+  },
+  {
+    "id": "gp18",
+    "file": "packages.py",
+    "line": 19,
+    "claim": "The condition is inverted, causing nearly every loaded non-chardet module to be aliased under requests.packages while skipping the actual chardet modules."
+  },
+  {
+    "id": "gp19",
+    "file": "sessions.py",
+    "line": 324,
+    "claim": "The negated condition deletes Authorization when it should be preserved (and can raise KeyError when absent), while retaining it when a redirect requires stripping credentials."
+  },
+  {
+    "id": "gp20",
+    "file": "sessions.py",
+    "line": 787,
+    "claim": "Elapsed time is calculated by adding the start timestamp instead of subtracting it from the end timestamp, producing a wildly incorrect duration."
+  },
+  {
+    "id": "gp21",
+    "file": "status_codes.py",
+    "line": 122,
+    "claim": "Subtracting one string from another raises TypeError during _init(), preventing the module from importing."
+  },
+  {
+    "id": "gp22",
+    "file": "structures.py",
+    "line": 55,
+    "claim": "The inverted condition replaces every non-None data argument with an empty dict while leaving None to be passed to update(), so initialization either discards the supplied data or raises TypeError."
+  },
+  {
+    "id": "gp23",
+    "file": "structures.py",
+    "line": 130,
+    "claim": "get() ignores its default argument, returning None instead of the caller-provided default when the key is absent."
+  },
+  {
+    "id": "gp24",
+    "file": "utils.py",
+    "line": 338,
+    "claim": "The exception handler suppresses every exception raised while writing or replacing the file, causing atomic_open to report success after failure."
+  },
+  {
+    "id": "gp25",
+    "file": "utils.py",
+    "line": 564,
+    "claim": "The parameter value slice starts at idx - 1 instead of idx + 1, so values such as charset=utf-8 are parsed as t=utf-8."
+  }
+]

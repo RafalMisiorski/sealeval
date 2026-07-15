@@ -1,0 +1,1 @@
+[{"line":338,"claim":"The exception handler suppresses every exception raised while writing or replacing the file, causing atomic_open to report success after failure."},{"line":564,"claim":"The parameter value slice starts at idx - 1 instead of idx + 1, so values such as charset=utf-8 are parsed as t=utf-8."}]

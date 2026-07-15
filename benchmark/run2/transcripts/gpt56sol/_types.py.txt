@@ -1,0 +1,1 @@
+[{"line":52,"claim":"is_prepared returns True for every request at runtime, so requests with a None URL or method are incorrectly accepted as fully prepared."}]

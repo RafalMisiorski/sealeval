@@ -1,0 +1,3 @@
+```json
+[{"line": 293, "claim": "s_auth is obtained via r.headers.get(\"www-authenticate\") with no default (line 291), so on a 4xx response lacking the WWW-Authenticate header s_auth is None and s_auth.lower() raises AttributeError instead of returning the response."}]
+```

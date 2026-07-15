@@ -1,0 +1,1 @@
+[{"line":19,"claim":"The condition is inverted, causing nearly every loaded non-chardet module to be aliased under requests.packages while skipping the actual chardet modules."}]

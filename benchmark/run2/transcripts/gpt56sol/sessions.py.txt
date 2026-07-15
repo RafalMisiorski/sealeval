@@ -1,0 +1,1 @@
+[{"line":324,"claim":"The negated condition deletes Authorization when it should be preserved (and can raise KeyError when absent), while retaining it when a redirect requires stripping credentials."},{"line":787,"claim":"Elapsed time is calculated by adding the start timestamp instead of subtracting it from the end timestamp, producing a wildly incorrect duration."}]

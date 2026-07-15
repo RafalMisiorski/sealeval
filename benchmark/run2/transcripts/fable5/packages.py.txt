@@ -1,0 +1,1 @@
+[{"line": 19, "claim": "The condition is inverted with `not` — it aliases every module EXCEPT the chardet-compatible package under `requests.packages.*`, while skipping the chardet modules it was meant to alias."}]

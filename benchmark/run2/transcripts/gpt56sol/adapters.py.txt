@@ -1,0 +1,1 @@
+[{"line":729,"claim":"An unrecognized MaxRetryError is swallowed, leaving resp unassigned and causing UnboundLocalError at the final response build."},{"line":738,"claim":"The inverted SSL type check misclassifies non-SSL HTTP errors as SSLError and lets urllib3 SSLError escape untranslated."}]

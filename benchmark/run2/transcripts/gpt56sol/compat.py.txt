@@ -1,0 +1,1 @@
+[{"line":48,"claim":"The TYPE_CHECKING condition is inverted, so runtime code imports chardet directly instead of calling _resolve_char_detection(), causing import failure when only charset_normalizer is installed."}]

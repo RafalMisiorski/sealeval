@@ -1,0 +1,4 @@
+[
+  {"line": 1017, "claim": "iter_lines uses subtraction `(pending) - (chunk)` instead of concatenation `pending + chunk`, which raises TypeError at runtime whenever a pending partial line must be joined with the next chunk."},
+  {"line": 1074, "claim": "Inverted condition `if not (self.encoding is None)` replaces an explicitly-set encoding with apparent_encoding and skips auto-detection when encoding is None (the opposite of the intended fallback), so a user-set encoding is ignored and unset encodings never get detected."}
+]

@@ -1,0 +1,1 @@
+[{"line":77,"claim":"The condition is inverted: the minimum minor-version check runs for urllib3 major versions other than 1, rejecting supported urllib3 2.x while failing to reject urllib3 1.x versions below 1.21."}]

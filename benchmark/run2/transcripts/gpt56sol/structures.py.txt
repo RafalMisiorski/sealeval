@@ -1,0 +1,1 @@
+[{"line":55,"claim":"The inverted condition replaces every non-None data argument with an empty dict while leaving None to be passed to update(), so initialization either discards the supplied data or raises TypeError."},{"line":130,"claim":"get() ignores its default argument, returning None instead of the caller-provided default when the key is absent."}]

@@ -1,0 +1,1 @@
+[{"line":293,"claim":"A 4xx response without a WWW-Authenticate header makes s_auth None, so calling s_auth.lower() raises AttributeError."},{"line":243,"claim":"The qop token list is split without trimming whitespace, so a valid value such as \"auth-int, auth\" fails to recognize auth and aborts digest authentication."}]

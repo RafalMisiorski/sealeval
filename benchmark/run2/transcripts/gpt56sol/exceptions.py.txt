@@ -1,0 +1,1 @@
+[{"line":33,"claim":"The condition is inverted, causing line 34 to dereference `response` when it is `None` and to overwrite an explicitly supplied request."}]

@@ -1,0 +1,4 @@
+[
+  {"line": 338, "claim": "In atomic_open, the except block uses `pass` instead of re-raising, so any exception during the write is silently swallowed and the context manager exits successfully even though the target file was never written (upstream code has `raise` here)."},
+  {"line": 564, "claim": "In _parse_content_type_header, the parameter value is sliced as `param[(idx) - (1):]` instead of `param[idx + 1:]`, so the value wrongly includes the character before '=' and the '=' itself (e.g. 'charset=utf-8' yields 't=utf-8'), breaking charset extraction in get_encoding_from_headers."}
+]

@@ -1,0 +1,3 @@
+```json
+[{"line": 33, "claim": "The condition is inverted with `not (...)`: the original guard should assign `self.request = response.request` only when response is not None, request is unset, and response has a request attribute, but as written the body executes in the opposite cases — including when `response` is None, causing an AttributeError on `response.request` (line 34) for the common case of raising RequestException with no response."}]
+```

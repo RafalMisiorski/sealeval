@@ -1,0 +1,4 @@
+[
+  {"line": 729, "claim": "The MaxRetryError handler ends with `pass` instead of raising ConnectionError, so unhandled retry-exhaustion errors (e.g. plain connection refusal) are silently swallowed and execution falls through to `build_response(request, resp)` where `resp` is unbound, causing an UnboundLocalError instead of a proper ConnectionError."},
+  {"line": 738, "claim": "Inverted condition: `if not (isinstance(e, _SSLError))` raises SSLError for non-SSL errors (e.g. a ReadTimeoutError would be wrongly reported as SSLError before the elif is reached), while actual _SSLError instances skip the SSLError branch, fall through the ReadTimeout/InvalidHeader elifs, and are re-raised as the raw urllib3 exception."}
+]
