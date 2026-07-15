@@ -54,6 +54,13 @@ with a common-subset diagnostic to isolate it. See
 [`benchmark/run1/RESULTS.md`](benchmark/run1/RESULTS.md) and
 [`PROTOCOL.md`](benchmark/run1/PROTOCOL.md).
 
+**run2** (fresh seed, same recipe) upgrades both arms to frontier tier and the judge to a
+**cross-vendor panel** (a claim counts only if Claude *and* GPT judges independently confirm it):
+Claude Fable 5 **0.75 recall / 0.78 precision**, GPT-5.6-sol **0.83 / 0.80**. The pre-registered
+"two models beat one" premise was **killed by its own sealed rule** — union recall lift 0.000,
+both models blind to the *same* archetypes (null-deref, swallowed-exception). Published as
+pre-registered, either way — see [`benchmark/run2/RESULTS.md`](benchmark/run2/RESULTS.md).
+
 ## Install
 
 ```bash
