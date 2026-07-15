@@ -1,0 +1,84 @@
+{
+  "frozen_at": "2026-07-15T10:18:43.829740+00:00",
+  "content_sha256": "099ed770d2ac08ffd0a4fbcb267df799b0035524c8db0aea514597b49862d3b4",
+  "content": {
+    "benchmark": "M31 -- cross-model complementarity A/B: Fable 5 vs GPT-5.6-sol vs union, blind cross-model panel judge",
+    "clean_repo": {
+      "url": "https://github.com/psf/requests",
+      "commit": "4c800e9aea2059660b8306b0fc8f9e9a4232cb3e",
+      "subdir": "src/requests"
+    },
+    "mutation_config": {
+      "per_file": 3,
+      "seed": 20260715,
+      "per_archetype_cap": 10,
+      "total": 24
+    },
+    "corpus_manifest_sha256": {
+      "__init__.py": "06c6da67d6c85823026c425df817a24fa041239652f7efec91145e1af8f6f7ab",
+      "__version__.py": "138a8ee2cb71898d5195c6937daa4e9045daff7e69949e1f68ed839fb777c39b",
+      "_internal_utils.py": "3c72d298d4a062c5eb87d62241b55f0d6cc884cab8fbb4b70b1f0587317b149f",
+      "_types.py": "5eb5fc19d6a03cd7c6a3c104779425ec724f42d4701ee0ec4b8001c6bb892ca0",
+      "adapters.py": "871c09600c5de8297ea64203900a237c5c36eb5606ce91192e7d5f7f843d99ca",
+      "api.py": "83e10c654350801e8e993aef6dfe99a78f522947f6ff4fa7d3840b15f07606d3",
+      "auth.py": "d8c1fd7ff379361dfcb5a3a56304f7189db5b873820aea7169e0264d0cdb624e",
+      "certs.py": "5200c997cec403786b1045457c262f1b259270e0fe936b2bac9ba0f5efa84d2e",
+      "compat.py": "5531afdebf8adc6e0e44df49f3e810ee035869a4660c4046a57e7775776aa4a6",
+      "cookies.py": "8711dbcc259960f6404553b57579854e33dadf5acf8b68543beeb6b63b7b76a0",
+      "exceptions.py": "42eb05cba71127653745be936e895dd44cb618c7a4db7a1f73e55e82618ded9d",
+      "help.py": "b0a55cbda6724edee7565aa3fe7bacbddfa9e33de789a21a5b23e779d2fcf556",
+      "hooks.py": "aa947312c1c17982362bcbdf8bf1adcbe821ecee0cfb47481e1e94129c2ff406",
+      "models.py": "d7e2830733bba2d3dc98c2a6d908ffc6fa6a17e328fb555f015ce355730b18c9",
+      "packages.py": "c7a7d4bbce59dd629e39aa3400d18ff9a7adf285b75ed5bc0d44cc36e36e35eb",
+      "sessions.py": "73c34e860804e815e37fc018ce98325e5408f3fbe898953fcd7635cf2fd2910a",
+      "status_codes.py": "0be31cc0aae380a20c5e3ae5a9061da62a7d587abb830e11c6476ee501f11741",
+      "structures.py": "ad1b0a87f808600d87de8fd27c11ce875abd4f7392d8e64205151b6f098aee28",
+      "utils.py": "60b7bdfe067558dfc7e78dfb77eb7947e171ee47ff38516318cf09d762a66064"
+    },
+    "injection_seal": {
+      "algo": "sha256",
+      "salt": "bb00af54b8b50bd0d1279495d9adb504",
+      "seal": "3cf9b983829e3c8e9b13c590792380cebb415fda7d7e5dd96d498c9a905c9c9a",
+      "n": 24
+    },
+    "systems": [
+      {
+        "id": "fable5",
+        "desc": "Claude Fable 5 via claude CLI (stream-json interactive, model claude-fable-5), fresh process per file, cwd pinned to corpus"
+      },
+      {
+        "id": "gpt56sol",
+        "desc": "OpenAI GPT-5.6-sol via codex exec --json (model gpt-5.6-sol, sandbox read-only), fresh process per file, cwd pinned to corpus"
+      },
+      {
+        "id": "union",
+        "desc": "derived arm C: concatenation of fable5 + gpt56sol findings, deduplicated on (file, line)"
+      }
+    ],
+    "system_prompt_sha256": "e8bc8ea285e836baeb0e9da8b4fb21bb0ffd7683d7eb088d05a8f900a6eeaf7e",
+    "judging": {
+      "panel": "each claim judged independently by BOTH claude-fable-5 and gpt-5.6-sol (sealeval.judge, provenance stripped, refute-by-default, fresh process per claim)",
+      "confirmed": "a claim is CONFIRMED only if BOTH panelists return GENUINE_BUG",
+      "self_preference_control": "symmetric cross-vendor panel + provenance stripping; both arms face the same two judges"
+    },
+    "metrics": {
+      "TP": "CONFIRMED (both judges GENUINE_BUG) AND claim matches a sealed injection (same file, |line-line_key| <= 1)",
+      "precision": "TP / all claims of the arm (hallucinated/out-of-scope files count against precision)",
+      "recall": "distinct injections matched by a TP / total injections",
+      "complementarity": "caught(X)\\caught(Y) on distinct injection ids matched by TPs",
+      "judge_disagreement_rate": "share of claims where the two panelists disagree (diagnostic only, no decision weight)"
+    },
+    "line_tolerance": 1,
+    "hypotheses": {
+      "H1_two_sided_complementarity": "|caught(fable5)\\caught(gpt56sol)| >= 3 AND |caught(gpt56sol)\\caught(fable5)| >= 3",
+      "H2_union_lift": "recall(union) >= max(recall(fable5), recall(gpt56sol)) + 0.10 AND precision(union) >= 0.50"
+    },
+    "decision_rule": {
+      "GO": "H2 true -> two-barrel (crossgate) routing has measured value; proceed to productized gate measurement",
+      "KILL": "recall(union) - max(solo recalls) < 0.05 OR precision(union) < 0.40 -> union adds noise, not coverage; single-best-model routing stands",
+      "otherwise": "INCONCLUSIVE -> no build; may only raise a new sealed A/B"
+    },
+    "prior_note": "run1 (seed 20260707, Sonnet-tier claude): codex 0.75 recall / 0.62 precision, claude 0.33/0.47. M31 upgrades the claude arm to Fable 5; fresh seed => fresh injection set, fresh CLI process per call => no cross-run contamination.",
+    "cost_accounting": "both arms subscription-backed CLIs; report CLI call counts + wall time per arm (no per-dollar claim pre-registered)"
+  }
+}
