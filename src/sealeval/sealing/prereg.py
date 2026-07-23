@@ -48,8 +48,30 @@ def corpus_manifest(corpus_root: Path, files: Sequence[Path]) -> dict[str, str]:
     return out
 
 
-def freeze(content: dict, path: Path, *, frozen_at: Optional[str] = None) -> dict:
-    """Write ``prereg.lock.json`` = ``{frozen_at, content_sha256, content}``."""
+def freeze(content: dict, path: Path, *, frozen_at: Optional[str] = None,
+           round0: Optional[dict] = None, require_round0: bool = False) -> dict:
+    """Write ``prereg.lock.json`` = ``{frozen_at, content_sha256, content}``.
+
+    Round-0 integration (see ``sealeval.measure.pilot``): pass the ``round0_gate()`` result as
+    ``round0`` and the seal will (a) REFUSE to freeze on unvalidated apparatus, and (b) bind the
+    Round-0 receipt into the hashed content, so the lock itself records that controls, metric
+    headroom, parse-rate and leakage were checked BEFORE the run. ``require_round0=True`` makes
+    supplying it mandatory.
+
+    Backwards compatible: with no ``round0`` argument the content and hash are bit-identical to
+    the previous behaviour, so existing locks (e.g. skillsbench prereg_v1..v27) still verify.
+    """
+    if round0 is not None:
+        if not round0.get("ready_to_seal"):
+            raise PreRegError(
+                "Round 0 did not pass -- refusing to seal on unvalidated apparatus: "
+                + "; ".join(round0.get("blocking", ["(no reason given)"])))
+        from sealeval.measure.pilot import round0_receipt  # local import: avoids import cycle
+        content = {**content, "round0": round0_receipt(round0)}
+    elif require_round0:
+        raise PreRegError(
+            "require_round0=True but no Round-0 result supplied -- run measure.round0_gate() "
+            "and pass it as round0=; do not seal an unvalidated apparatus")
     when = frozen_at or datetime.now(timezone.utc).isoformat()
     lock = {
         "frozen_at": when,

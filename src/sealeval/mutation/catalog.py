@@ -175,6 +175,121 @@ def _swallowed_exception(tree: ast.AST, src: str) -> list[Candidate]:
     return out
 
 
+# ---------------------------------------------------------------------------
+# v2 archetypes -- IDIOMATIC mutants (no stylistic fingerprint)
+#
+# Why v2 exists: the v1 generators wrap their edits in parentheses -- `not (flag)`,
+# `(n) - (0)`, `range((len(rows)) - 1)`. An independent reviewer wrote a "reviewer" out of
+# three regexes (`not \(`, `\) [-+] \(`, `\) - 1\)`) -- no AST, no model, no understanding --
+# and scored recall 0.80 / precision 0.77 against a v1-sealed key. A benchmark that can be
+# beaten by tell-spotting measures tell-spotting, and it biases recall UP.
+#
+# v2 emits code that reads like ordinary code: comparison operators are FLIPPED rather than
+# negated, and parentheses are added only where precedence genuinely requires them.
+# v1 is left byte-identical so existing sealed keys still verify -- the archetype set is
+# VERSIONED, not patched in place.
+# ---------------------------------------------------------------------------
+
+# operands that bind looser than the operator we splice them into -> need parens
+_LOOSE = (ast.BoolOp, ast.IfExp, ast.Lambda, ast.Compare, ast.Await, ast.NamedExpr)
+_CMP_FLIP = {ast.Lt: "<=", ast.LtE: "<", ast.Gt: ">=", ast.GtE: ">",
+             ast.Eq: "!=", ast.NotEq: "==", ast.Is: "is not", ast.IsNot: "is",
+             ast.In: "not in", ast.NotIn: "in"}
+# NOTE: Lt->LtE (not Lt->GtE): an off-by-one on a boundary is a realistic defect, whereas a
+# full inversion often changes behaviour so grossly that any smoke test catches it.
+
+
+def _paren(seg: str, node: ast.AST, *, also=()) -> str:
+    return f"({seg})" if isinstance(node, _LOOSE + tuple(also)) else seg
+
+
+def _off_by_one_v2(tree: ast.AST, src: str) -> list[Candidate]:
+    out: list[Candidate] = []
+    for node in ast.walk(tree):
+        if not (isinstance(node, ast.Call) and isinstance(node.func, ast.Name)):
+            continue
+        if node.func.id != "range" or not node.args or node.keywords:
+            continue
+        if not _single_line(node):
+            continue
+        segs = [source_segment(src, a) for a in node.args]
+        if any(s is None for s in segs):
+            continue
+        last = node.args[-1]
+        # `a + b - 1` == `(a + b) - 1`, so only genuinely-looser operands get parens
+        segs[-1] = _paren(segs[-1], last) + " - 1"
+        out.append(Candidate("off_by_one", node, "range(" + ", ".join(segs) + ")",
+                             "narrowed range upper bound by 1"))
+    return out
+
+
+def _inverted_condition_v2(tree: ast.AST, src: str) -> list[Candidate]:
+    """Flip the comparison instead of wrapping it in `not (...)`."""
+    out: list[Candidate] = []
+    for node in ast.walk(tree):
+        if not isinstance(node, ast.If) or not _single_line(node.test):
+            continue
+        test = node.test
+        if isinstance(test, ast.Compare) and len(test.ops) == 1:
+            op = _CMP_FLIP.get(type(test.ops[0]))
+            left, right = source_segment(src, test.left), source_segment(src, test.comparators[0])
+            if op is None or left is None or right is None:
+                continue
+            out.append(Candidate("inverted_condition", test, f"{left} {op} {right}",
+                                 "flipped a comparison operator"))
+        elif isinstance(test, ast.BoolOp) and len(test.values) >= 2:
+            joiner = " or " if isinstance(test.op, ast.And) else " and "
+            segs = [source_segment(src, v) for v in test.values]
+            if any(s is None for s in segs):
+                continue
+            parts = [_paren(s, v) for s, v in zip(segs, test.values)]
+            out.append(Candidate("inverted_condition", test, joiner.join(parts),
+                                 "swapped and/or in a condition"))
+        # anything else (bare call, name) is skipped: it cannot be inverted idiomatically
+    return out
+
+
+def _wrong_operator_v2(tree: ast.AST, src: str) -> list[Candidate]:
+    out: list[Candidate] = []
+    for node in ast.walk(tree):
+        if not (isinstance(node, ast.BinOp) and isinstance(node.op, (ast.Add, ast.Sub))):
+            continue
+        if not _single_line(node) or _is_strlike(node.left) or _is_strlike(node.right):
+            continue
+        left, right = source_segment(src, node.left), source_segment(src, node.right)
+        if left is None or right is None:
+            continue
+        flipped = "-" if isinstance(node.op, ast.Add) else "+"
+        # `a - b + c` != `a - (b + c)`: a right operand at the SAME precedence needs parens
+        rseg = _paren(right, node.right,
+                      also=(ast.BinOp,) if isinstance(node.right, ast.BinOp)
+                      and isinstance(node.right.op, (ast.Add, ast.Sub)) else ())
+        out.append(Candidate("wrong_operator", node, f"{_paren(left, node.left)} {flipped} {rseg}",
+                             "flipped + and - operator"))
+    return out
+
+
+def _null_deref_v2(tree: ast.AST, src: str) -> list[Candidate]:
+    """Same edit as v1, but skips EQUIVALENT mutants: `.get(k, None)` == `.get(k)`."""
+    out: list[Candidate] = []
+    for node in ast.walk(tree):
+        if not (isinstance(node, ast.Call) and isinstance(node.func, ast.Attribute)):
+            continue
+        if node.func.attr != "get" or len(node.args) != 2 or node.keywords:
+            continue
+        if not _single_line(node):
+            continue
+        default = node.args[1]
+        if isinstance(default, ast.Constant) and default.value is None:
+            continue   # behaviour-identical -> must never enter a sealed key
+        obj, key = source_segment(src, node.func.value), source_segment(src, node.args[0])
+        if obj is None or key is None:
+            continue
+        out.append(Candidate("null_deref", node, f"{obj}.get({key})",
+                             "dropped .get() default -> may yield None"))
+    return out
+
+
 # Registry: name -> finder. MVP default uses the first three; the extras widen
 # site availability so a small repo can still reach the labeled-bug target.
 ArchetypeFn = Callable[[ast.AST, str], list[Candidate]]
@@ -187,22 +302,43 @@ ARCHETYPES: dict[str, ArchetypeFn] = {
     "swallowed_exception": _swallowed_exception,
 }
 
+ARCHETYPES_V2: dict[str, ArchetypeFn] = {
+    "off_by_one": _off_by_one_v2,
+    "inverted_condition": _inverted_condition_v2,
+    "wrong_operator": _wrong_operator_v2,
+    "null_deref": _null_deref_v2,
+    "swallowed_exception": _swallowed_exception,   # already idiomatic (`except: pass`)
+}
+
+# version -> registry. v1 is frozen for reproducing existing sealed runs; v2 is the default
+# for NEW runs because v1 is tell-spottable (see the v2 note above).
+ARCHETYPE_SETS: dict[str, dict[str, ArchetypeFn]] = {"v1": ARCHETYPES, "v2": ARCHETYPES_V2}
+DEFAULT_ARCHETYPE_VERSION = "v2"
+
 MVP_ARCHETYPES = ("off_by_one", "inverted_condition", "wrong_operator", "null_deref", "swallowed_exception")
 
 
-def find_candidates(src: str, archetypes: tuple[str, ...] = MVP_ARCHETYPES) -> list[Candidate]:
+def find_candidates(src: str, archetypes: tuple[str, ...] = MVP_ARCHETYPES,
+                    version: str = DEFAULT_ARCHETYPE_VERSION) -> list[Candidate]:
     """Parse ``src`` and return all candidate mutations for the given archetypes.
+
+    ``version`` selects the archetype set: ``"v2"`` (default) emits idiomatic mutants;
+    ``"v1"`` reproduces the original, tell-spottable edits and exists only so previously
+    sealed runs stay reproducible. Record the version in your pre-registration.
 
     Returns an empty list if the source does not parse (the file is unusable as a
     seeding target but is still copied verbatim into the corpus by the seeder).
     """
+    registry = ARCHETYPE_SETS.get(version)
+    if registry is None:
+        raise KeyError(f"unknown archetype version {version!r} (have {sorted(ARCHETYPE_SETS)})")
     try:
         tree = ast.parse(src)
     except SyntaxError:
         return []
     out: list[Candidate] = []
     for name in archetypes:
-        finder = ARCHETYPES.get(name)
+        finder = registry.get(name)
         if finder is None:
             raise KeyError(f"unknown archetype {name!r}")
         out.extend(finder(tree, src))
