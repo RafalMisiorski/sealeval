@@ -64,13 +64,17 @@ def replace_span(src: str, node: ast.AST, new_text: str) -> str:
     """Replace ``node``'s single-line source span with ``new_text``.
 
     Only valid for nodes where ``lineno == end_lineno`` (guaranteed by callers).
-    Column offsets index into the line's character string (exact for ASCII source;
-    the seeder's compile-guard catches any rare multibyte edge case).
+    ``col_offset``/``end_col_offset`` are UTF-8 BYTE offsets (CPython), so we slice on the
+    line's bytes, not its characters -- otherwise any non-ASCII earlier on the line shifts the
+    edit and can silently mis-splice while still parsing (caught by an external code review; the
+    compile-guard only catches SYNTAX errors, not a valid-but-wrong edit). Identical to char
+    slicing for ASCII source, so existing sealed keys reproduce byte-for-byte.
     """
     lines = src.splitlines(keepends=True)
     i = node.lineno - 1  # type: ignore[attr-defined]
-    line = lines[i]
-    lines[i] = line[: node.col_offset] + new_text + line[node.end_col_offset :]  # type: ignore[attr-defined]
+    raw = lines[i].encode("utf-8")
+    lines[i] = (raw[: node.col_offset] + new_text.encode("utf-8")
+                + raw[node.end_col_offset :]).decode("utf-8")  # type: ignore[attr-defined]
     return "".join(lines)
 
 

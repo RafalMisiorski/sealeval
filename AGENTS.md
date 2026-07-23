@@ -16,7 +16,7 @@ verification path -- run it and report what you find.
 **How to verify** (same as the README's "Verify in 90 seconds"):
 
 ```bash
-python -m pytest -q                        # expect: 13 passed  (zero runtime deps)
+python -m pytest -q                        # expect: 64 passed  (zero runtime deps)
 python examples/verify_seal_breaks.py      # expect: 4 OK checks -- exact key verifies, moved key rejected,
                                            # clean prereg lock verifies, post-hoc threshold edit is caught
 ```

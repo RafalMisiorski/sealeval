@@ -317,3 +317,15 @@ def test_seed_result_records_archetype_version():
     from sealeval.mutation import catalog
     assert catalog.DEFAULT_ARCHETYPE_VERSION == "v2"
     assert set(catalog.ARCHETYPE_SETS) == {"v1", "v2"}
+
+
+def test_replace_span_byte_offsets_survive_nonascii():
+    """col_offset is a UTF-8 byte offset: non-ASCII earlier on the line must not shift the edit.
+    (External review, 2026-07: char slicing mis-spliced and still parsed -> key/diff desync.)"""
+    import ast
+    from sealeval.mutation import catalog
+    src = 'label = "café"; ok = x > y\n'          # 'é' = 1 char, 2 bytes, before the compare
+    cmp = [n for n in ast.walk(ast.parse(src)) if isinstance(n, ast.Compare)][0]
+    out = catalog.replace_span(src, cmp, "x < y")
+    ast.parse(out)                                        # still valid
+    assert out == 'label = "café"; ok = x < y\n'    # edit landed exactly, 'café' intact

@@ -139,12 +139,33 @@ For a non-self-preferring panel, call `judge_claims` once per model and require 
   goalpost-move the seal exists to prevent. Raw "found more files" is
   exactly the metric this design exists to debunk (more flags usually means lower precision).
 
-## Benchmark runs in this repo
-
 ## A public run you can audit — `benchmark/run1`
+
+Not a toy: three real code reviewers (Claude Sonnet, OpenAI Codex, Gemini) swept a 24-injection
+corpus over [`psf/requests`](https://github.com/psf/requests), scored by this library. The
+integrity is checkable straight from `git log` — the commit sealing the key
+(`sha256`, n=24) **precedes** the commit adding any findings, which **precedes** the reveal:
+
+| system | precision | recall | |
+|---|---|---|---|
+| codex | 0.62 | **0.75** | falsified the pre-registered prior |
+| gemini | 0.77 | 0.42 † | |
+| claude | 0.47 | 0.33 | |
+
+The pre-registered prior H1 (*"no system exceeds 0.5 recall at ≥0.5 precision"*, written into
+`prereg.lock.json` before the run) was **falsified** by codex — published either way, which is the
 whole point. Every judge reply is in `benchmark/run1/transcripts/`; the metric is a *floor* (a
+genuine bug not in our injected key counts against precision). † gemini reviewed 15/19 files — the
+4 largest hit a transport (`agy --print`) argv limit; disclosed in full rather than papered over,
+with a common-subset diagnostic to isolate it. See
 [`benchmark/run1/RESULTS.md`](benchmark/run1/RESULTS.md) and
 [`PROTOCOL.md`](benchmark/run1/PROTOCOL.md).
+
+**run2** (fresh seed, same recipe) upgrades both arms to frontier tier and the judge to a
+**cross-vendor panel** (a claim counts only if Claude *and* GPT judges independently confirm it):
+Claude Fable 5 **0.75 recall / 0.78 precision**, GPT-5.6-sol **0.83 / 0.80**. The pre-registered
+"two models beat one" premise was **killed by its own sealed rule** — union recall lift 0.000,
+both models blind to the *same* archetypes (null-deref, swallowed-exception). Published as
 pre-registered, either way — see [`benchmark/run2/RESULTS.md`](benchmark/run2/RESULTS.md).
 
 MIT licensed. Extracted from a private pre-registered benchmark whose own verdict was a KILL;
