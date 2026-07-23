@@ -1,0 +1,11 @@
+a,b,truth,control
+F,F,F,obvious_positive
+C,C,C,obvious_negative
+F,F,F,
+C,C,C,
+F,C,F,
+F,F,F,
+C,F,C,
+C,C,C,
+F,F,F,
+C,C,F,

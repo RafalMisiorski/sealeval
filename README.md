@@ -1,70 +1,74 @@
 # sealeval
 
-**Pre-registered, sealed-ground-truth evaluation of code-analysis systems.** Zero
-dependencies. You bring the LLM call.
+### Your eval says 8/8. That is `[0.68, 1.0]` — and you haven't yet checked whether your judge can tell an obvious case apart.
 
-Most "we evaluated our AI code reviewer" results are slop: hand-scored rubrics, raw
+Check the first one right now, on your own number, without installing a framework or wiring a
+judge: `sealeval check --accuracy 8/8`. The demo additionally refuses to seal a design whose
+baseline sits at the ceiling; controls that VOID a run on a missed obvious case are covered in the
+test suite (`test_panel_void_short_circuits`).
+
+> *Why this exists:* we ran our own tool's "8/8" claim through a cross-vendor panel with
+> controls and it came back 0.43, CI [0.16, 0.75] — indistinguishable from chance. **That run
+> was internal and its raw labels are not shipped in this repo, so treat it as an anecdote,
+> not evidence.** The evidence for this library is the code, the tests and the demo below.
+
+**How:** ground truth sealed *before* the run, judges from *different vendors*, an interval
+instead of a flattering point estimate, and an apparatus check that refuses to seal a design
+which cannot show an effect in the first place.
+
+```bash
+pip install -e .
+sealeval check --accuracy 8/8        # ten seconds, on a number you already have
+sealeval check --labels examples/judges.csv   # kappa, controls, cross-family, on labels you have
+sealeval demo                        # 30-second offline tour, no API key, no LLM
+```
+
+**Start here, integrate nothing.** `sealeval check` works on what is already in front of you — a
+score, or a CSV of judge labels. If it tells you something uncomfortable, the rest of the package
+is how you fix it.
+
+The CSV is one column per judge, one row per case. Optional: `truth` (your pre-registered label),
+`tool` (the system under test), and `control` — a non-empty control name marks that row as an
+OBVIOUS case whose `truth` the judges must get right, or the whole run is VOID. See
+[`examples/judges.csv`](examples/judges.csv).
+
+## This is not only for code review
+
+Any time an **LLM judges something and you report a number**, the same four failure modes apply: a
+judge that cannot tell obvious cases apart, judges from one vendor sharing a taste, a point
+estimate hiding its interval, and a threshold picked after seeing the results. `sealeval.measure`
+is **domain-agnostic** — it operates on labels, not on code — so it applies to prompt A/Bs, RAG
+answer grading, agent-skill lift, moderation, extraction quality, anything judged.
+
+The AST mutation seeder is the one code-specific piece, and it is **optional**: it manufactures
+sealed ground truth when you don't have any. If you already have labels, skip it.
+
+Zero dependencies. You bring the LLM call (or none at all — `check` and the demo need no model).
+
+Most "we evaluated our AI" results are slop: hand-scored rubrics, raw
 find-counts, judges that know which system they're grading, thresholds chosen after seeing
 the numbers. `sealeval` is the opposite by construction — the one signal that's hard to
 fake is a benchmark whose ground truth was **sealed and committed before any system ran**,
 adjudicated **blind** and **refute-by-default**, scored on **confirmed** findings.
 
-It is three small, composable primitives:
+It is four small, composable primitives:
 
 | primitive | what it does |
 |---|---|
-| `sealeval.mutation` | inject **sealed AST bugs** into clean source (off-by-one, inverted-condition, wrong-operator, null-deref, swallowed-exception). Single-line edits keep every other line number byte-stable, so the injected diff is exactly one line and the key's line numbers are exact. Deterministic. |
+| `sealeval.measure` **(start here, domain-agnostic)** | works on labels from ANY judged task: a **Round 0** pilot that validates the apparatus before you seal (controls discriminate? metric has headroom? enough runs parsed?), **cross-family** panels, **Wilson CI**, **Cohen/Fleiss kappa**, a **metric-discrimination gate**, and `match_findings` for confirmed-not-flagged scoring. See [`measure/README.md`](src/sealeval/measure/README.md). |
+| `sealeval.mutation` *(optional, code-specific)* | inject **sealed AST bugs** into clean source (off-by-one, inverted-condition, wrong-operator, null-deref, swallowed-exception). Single-line edits keep every other line number byte-stable, so the injected diff is exactly one line and the key's line numbers are exact. Deterministic. |
 | `sealeval.sealing` | a **binding commitment**: `sha256(salt‖key)` you commit *before* any system runs (the commit timestamp proves the key was fixed first), revealed only after — plus a self-hashing pre-registration of your whole protocol that `verify()` re-checks for drift. |
 | `sealeval.judge` | **refute-by-default** adjudication: each claim is judged in isolation, provenance stripped, against a windowed code excerpt; verdicts are `GENUINE_BUG` / `REAL_NOT_BUG` / `REFUTED`, defaulting to REFUTED on any garbage. The LLM call is a `judge_fn` you supply. |
 
-## Verify in 90 seconds (zero setup)
-
-Zero dependencies, no API key, no network. Every claim below runs offline on a clean clone.
-
-```bash
-python -m pytest -q                        # 13 tests pass (seal roundtrip, tamper, reveal-gate, prereg drift, judge)
-python examples/verify_seal_breaks.py      # the differentiator, deterministic: the seal verifies the exact
-                                           # ground truth and rejects it the instant one byte moves; the prereg
-                                           # lock catches a GO/KILL threshold edited after the fact
-```
-
-The judge primitive needs *your* LLM call (`judge_fn`) so it can't run offline — but the two things
-that make a verdict defensible (the sealed key can't move; the goalposts can't move) are pure stdlib
-and prove themselves above with no model at all.
-
-## A public run you can audit — `benchmark/run1`
-
-Not a toy: three real code reviewers (Claude Sonnet, OpenAI Codex, Gemini) swept a 24-injection
-corpus over [`psf/requests`](https://github.com/psf/requests), scored by this library. The
-integrity is checkable straight from `git log` — the commit sealing the key
-(`sha256`, n=24) **precedes** the commit adding any findings, which **precedes** the reveal:
-
-| system | precision | recall | |
-|---|---|---|---|
-| codex | 0.62 | **0.75** | falsified the pre-registered prior |
-| gemini | 0.77 | 0.42 † | |
-| claude | 0.47 | 0.33 | |
-
-The pre-registered prior H1 (*"no system exceeds 0.5 recall at ≥0.5 precision"*, written into
-`prereg.lock.json` before the run) was **falsified** by codex — published either way, which is the
-whole point. Every judge reply is in `benchmark/run1/transcripts/`; the metric is a *floor* (a
-genuine bug not in our injected key counts against precision). † gemini reviewed 15/19 files — the
-4 largest hit a transport (`agy --print`) argv limit; disclosed in full rather than papered over,
-with a common-subset diagnostic to isolate it. See
-[`benchmark/run1/RESULTS.md`](benchmark/run1/RESULTS.md) and
-[`PROTOCOL.md`](benchmark/run1/PROTOCOL.md).
-
-**run2** (fresh seed, same recipe) upgrades both arms to frontier tier and the judge to a
-**cross-vendor panel** (a claim counts only if Claude *and* GPT judges independently confirm it):
-Claude Fable 5 **0.75 recall / 0.78 precision**, GPT-5.6-sol **0.83 / 0.80**. The pre-registered
-"two models beat one" premise was **killed by its own sealed rule** — union recall lift 0.000,
-both models blind to the *same* archetypes (null-deref, swallowed-exception). Published as
-pre-registered, either way — see [`benchmark/run2/RESULTS.md`](benchmark/run2/RESULTS.md).
-
 ## Install
 
+Not on PyPI yet — install from source:
+
 ```bash
-pip install sealeval        # or, from a clone:  pip install -e .
+git clone <this repo> && cd sealeval
+pip install -e ".[test]"    # zero RUNTIME deps; [test] adds pytest only
+sealeval demo               # the 30-second tour
+python -m pytest            # 60 tests
 ```
 
 ## The pipeline
@@ -128,9 +132,21 @@ For a non-self-preferring panel, call `judge_claims` once per model and require 
   `key.sealed` to git before the run and the history is the proof.
 - **Refute-by-default.** A finding counts only if a skeptic, shown just the code excerpt,
   cannot refute it — which kills the plausible-but-wrong findings that inflate naive scores.
-- **Confirmed, not flagged.** Pair the judge verdict with a sealed-key match: a true
-  positive is `GENUINE_BUG` **and** it lands on an injected site. Raw "found more files" is
+- **Confirmed, not flagged.** `measure.match_findings(findings, key, line_tolerance=2)` does
+  this for you: a true positive is `GENUINE_BUG` **and** it lands within the tolerance of an
+  injected site, and each injection can be claimed only once (so ten findings shotgunned at one
+  bug score one hit). Pre-register `line_tolerance` — widening it after seeing results is the
+  goalpost-move the seal exists to prevent. Raw "found more files" is
   exactly the metric this design exists to debunk (more flags usually means lower precision).
 
-MIT licensed. Extracted from a real pre-registered benchmark that returned a documented
-KILL — the methodology is the deliverable, not a win.
+## Benchmark runs in this repo
+
+## A public run you can audit — `benchmark/run1`
+whole point. Every judge reply is in `benchmark/run1/transcripts/`; the metric is a *floor* (a
+[`benchmark/run1/RESULTS.md`](benchmark/run1/RESULTS.md) and
+[`PROTOCOL.md`](benchmark/run1/PROTOCOL.md).
+pre-registered, either way — see [`benchmark/run2/RESULTS.md`](benchmark/run2/RESULTS.md).
+
+MIT licensed. Extracted from a private pre-registered benchmark whose own verdict was a KILL;
+that write-up is not shipped here, so treat this line as provenance, not evidence. The
+methodology is the deliverable, not a win.

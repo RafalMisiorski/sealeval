@@ -1,7 +1,9 @@
 """sealeval — pre-registered, sealed-ground-truth evaluation of code-analysis systems.
 
-Zero dependencies. Three composable primitives (you supply the LLM call):
+Zero dependencies. Four composable primitives (you supply the LLM call):
 
+    measure  : validate the apparatus, then report intervals + chance-corrected agreement
+               (domain-agnostic -- works on labels from ANY judged task)
     mutation : inject sealed AST bugs into a clean codebase (deterministic ground truth)
     sealing  : commit-ahead hash of the injection key + pre-registration (tamper-evident)
     judge    : refute-by-default, provenance-blind adjudication of claims (pluggable backend)
@@ -38,7 +40,7 @@ from sealeval.sealing.prereg import corpus_manifest
 from sealeval.sealing.prereg import freeze as prereg_freeze
 from sealeval.sealing.prereg import verify as prereg_verify
 
-__version__ = "0.1.0"
+__version__ = "0.2.0"
 
 __all__ = [
     "judge", "mutation", "sealing",

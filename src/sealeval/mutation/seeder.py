@@ -76,6 +76,7 @@ class SeedResult:
     files_total: int = 0
     files_mutated: int = 0
     archetype_counts: dict[str, int] = field(default_factory=dict)
+    archetype_version: str = catalog.DEFAULT_ARCHETYPE_VERSION
 
     @property
     def mutations(self) -> int:
@@ -114,6 +115,7 @@ def _mutate_one_file(
     rng: random.Random,
     remaining_budget: Optional[int],
     arch_budget: Optional[dict[str, int]] = None,
+    version: str = catalog.DEFAULT_ARCHETYPE_VERSION,
 ) -> tuple[str, list[InjectionRecord]]:
     """Apply <= per_file mutations (<=1 per archetype, distinct lines) to one file.
 
@@ -123,7 +125,7 @@ def _mutate_one_file(
     seeded key stays balanced across bug classes.
     """
     original_sha = sha256_text(src)
-    candidates = catalog.find_candidates(src, archetypes)
+    candidates = catalog.find_candidates(src, archetypes, version=version)
     if not candidates:
         return src, []
 
@@ -192,6 +194,7 @@ def seed_corpus(
     seed: int = 0,
     max_total: Optional[int] = None,
     per_archetype_cap: Optional[int] = None,
+    version: str = catalog.DEFAULT_ARCHETYPE_VERSION,
 ) -> SeedResult:
     """Copy ``src_root`` file set into ``out_dir`` and inject seeded mutations.
 
@@ -216,7 +219,7 @@ def seed_corpus(
     shuffled = sorted(rels, key=lambda p: p.as_posix())
     rng.shuffle(shuffled)
 
-    result = SeedResult(files_total=len(rels))
+    result = SeedResult(files_total=len(rels), archetype_version=version)
     injected = 0
     arch_budget = (
         {a: per_archetype_cap for a in archetypes} if per_archetype_cap is not None else None
@@ -238,7 +241,7 @@ def seed_corpus(
             continue
 
         mutated, records = _mutate_one_file(
-            content, rel.as_posix(), archetypes, per_file, rng, remaining, arch_budget
+            content, rel.as_posix(), archetypes, per_file, rng, remaining, arch_budget, version
         )
         dst_path.write_text(mutated, encoding="utf-8")
         if records:

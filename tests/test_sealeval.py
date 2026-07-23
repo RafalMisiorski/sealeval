@@ -227,3 +227,93 @@ def test_public_api_surface():
     for name in ["judge_claims", "seed_corpus", "make_seal", "verify_seal", "reveal",
                  "prereg_freeze", "JUDGE_SYSTEM", "VERDICTS"]:
         assert hasattr(se, name)
+
+
+def test_prereg_backwards_compatible_without_round0(tmp_path):
+    """No round0 argument -> content and hash bit-identical to the pre-Round-0 behaviour, so
+    existing locks (skillsbench prereg_v1..v27) still verify."""
+    content = {"bar": "keep iff lift >= 0.15", "n": 12}
+    a, b = tmp_path / "a.json", tmp_path / "b.json"
+    lock_old = prereg.freeze(content, a, frozen_at="2026-06-20T00:00:00Z")
+    lock_new = prereg.freeze(content, b, frozen_at="2026-06-20T00:00:00Z")
+    assert lock_old["content_sha256"] == lock_new["content_sha256"]
+    assert "round0" not in lock_new["content"] and prereg.verify(b) is True
+
+
+def test_prereg_binds_round0_receipt_into_the_seal(tmp_path):
+    from sealeval.measure import round0_gate
+    r0 = round0_gate(control_labels={"p": "F"}, control_truth={"p": "F"}, baseline_rate=0.30,
+                     attempted=10, parsed=10, leak_controlled=True)
+    lock = prereg.freeze({"bar": "x"}, tmp_path / "c.json", round0=r0)
+    assert lock["content"]["round0"]["round0_ready"] is True
+    assert prereg.verify(tmp_path / "c.json") is True   # receipt is inside the hashed content
+
+
+def test_prereg_refuses_to_seal_unvalidated_apparatus(tmp_path):
+    from sealeval.measure import round0_gate
+    bad = round0_gate(baseline_rate=0.95, attempted=10, parsed=10, leak_controlled=True,
+                      control_labels={"p": "F"}, control_truth={"p": "F"})  # ceiling'd metric
+    assert bad["ready_to_seal"] is False
+    with pytest.raises(prereg.PreRegError):
+        prereg.freeze({"bar": "x"}, tmp_path / "d.json", round0=bad)
+    with pytest.raises(prereg.PreRegError):
+        prereg.freeze({"bar": "x"}, tmp_path / "e.json", require_round0=True)
+
+
+def test_public_api_surface():
+    for name in ["judge_claims", "seed_corpus", "make_seal", "verify_seal", "reveal",
+                 "prereg_freeze", "JUDGE_SYSTEM", "VERDICTS"]:
+        assert hasattr(se, name)
+
+
+# --- versioned archetypes: the fingerprint fix -----------------------------
+
+_FP_SRC = '''
+def scan(rows, limit, cfg):
+    if len(rows) > limit:
+        return None
+    for i in range(len(rows)):
+        rows[i] = rows[i] + 1
+    mode = cfg.get("mode", "fast")
+    skip = cfg.get("skip", None)
+    return mode, skip
+'''
+# v1-SPECIFIC fingerprints. Note `) - 1)` is deliberately NOT here: `foo(len(x) - 1)` is
+# ordinary Python, and the empirical regex attack scored 12 false positives on clean source
+# with it. A tell has to discriminate, or it is just a common substring.
+_TELLS = ("not (", ") - (", ") + (", ")) - 1)")
+
+
+def test_v1_mutants_carry_the_parenthesis_fingerprint():
+    """Documents the defect v2 fixes: a 3-regex 'reviewer' scored recall 0.79 against a
+    v1-sealed key because these edits are stylistically distinctive."""
+    from sealeval.mutation import catalog
+    c1 = catalog.find_candidates(_FP_SRC, version="v1")
+    assert any(any(t in c.new_src for t in _TELLS) for c in c1)
+
+
+def test_v2_mutants_are_idiomatic_no_fingerprint():
+    from sealeval.mutation import catalog
+    c2 = catalog.find_candidates(_FP_SRC, version="v2")
+    assert c2, "v2 must still find candidates"
+    assert not any(any(t in c.new_src for t in _TELLS) for c in c2)
+    # comparisons are flipped, not negated
+    assert any(c.archetype == "inverted_condition" and ">=" in c.new_src for c in c2)
+
+
+def test_v2_skips_equivalent_null_deref_mutant():
+    """`.get(k, None)` -> `.get(k)` is behaviour-identical; it must never enter a sealed key."""
+    from sealeval.mutation import catalog
+    v2_null = [c for c in catalog.find_candidates(_FP_SRC, version="v2")
+               if c.archetype == "null_deref"]
+    v1_null = [c for c in catalog.find_candidates(_FP_SRC, version="v1")
+               if c.archetype == "null_deref"]
+    assert len(v1_null) == 2                      # v1 mutates both .get calls
+    assert len(v2_null) == 1                      # v2 skips the `None` default one
+    assert '"mode"' in v2_null[0].new_src
+
+
+def test_seed_result_records_archetype_version():
+    from sealeval.mutation import catalog
+    assert catalog.DEFAULT_ARCHETYPE_VERSION == "v2"
+    assert set(catalog.ARCHETYPE_SETS) == {"v1", "v2"}
