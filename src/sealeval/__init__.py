@@ -17,7 +17,7 @@ Extracted from a real pre-registered code-review benchmark; the adjudication log
 the original LLM wiring is removed so you bring your own ``judge_fn``.
 """
 
-from sealeval import judge, mutation, sealing
+from sealeval import audit, judge, mutation, sealing
 from sealeval.judge import (
     JUDGE_SYSTEM,
     VERDICTS,
@@ -40,10 +40,10 @@ from sealeval.sealing.prereg import corpus_manifest
 from sealeval.sealing.prereg import freeze as prereg_freeze
 from sealeval.sealing.prereg import verify as prereg_verify
 
-__version__ = "0.2.0"
+__version__ = "0.3.0"
 
 __all__ = [
-    "judge", "mutation", "sealing",
+    "audit", "judge", "mutation", "sealing",
     "judge_claims", "JudgeReport", "JudgeVerdict", "JUDGE_SYSTEM", "VERDICTS",
     "load_scope", "append_calibration",
     "seed_corpus", "find_candidates", "InjectionRecord", "ARCHETYPES",

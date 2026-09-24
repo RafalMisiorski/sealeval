@@ -139,6 +139,10 @@ def _check_labels(path: str, families: Optional[str]) -> int:
 
 
 def main(argv: Optional[list] = None) -> int:
+    argv = list(sys.argv[1:] if argv is None else argv)
+    if argv and argv[0] == "audit":
+        from sealeval.audit.cli import main as audit_main
+        return audit_main(argv[1:])
     ap = argparse.ArgumentParser(
         prog="sealeval",
         description="Check whether an evaluation number actually supports what you want to claim.")
@@ -151,6 +155,7 @@ def main(argv: Optional[list] = None) -> int:
                    help="CSV of judge labels (one column per judge; optional truth/tool)")
     c.add_argument("--families", metavar="j:vendor,...", help="judge -> vendor, to check cross-family")
     sub.add_parser("demo", help="the 30-second offline tour")
+    sub.add_parser("audit", help="leak / controls / pairs / recapture / temporal / review on CSVs you already have")
 
     args = ap.parse_args(argv)
     if args.cmd == "demo":

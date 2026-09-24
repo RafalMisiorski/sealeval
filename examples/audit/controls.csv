@@ -1,0 +1,13 @@
+id,role,stratum,j1,j2,j3
+e001,sample,engine_only,NO,NO,YES
+e002,control_pos,engine_only,YES,YES,NO
+e003,sample,search_only,YES,YES,YES
+e004,sample,engine_only,NO,UNCLEAR,YES
+e005,sample,multi,YES,YES,YES
+e006,control_neg,search_only,NO,NO,YES
+e007,sample,engine_only,NO,NO,YES
+e008,sample,search_only,YES,NO,YES
+e009,control_pos,multi,YES,YES,NO
+e010,sample,multi,YES,YES,YES
+e011,sample,engine_only,YES,NO,YES
+e012,sample,search_only,YES,YES,

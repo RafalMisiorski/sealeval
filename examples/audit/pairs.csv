@@ -1,0 +1,17 @@
+pair_id,kind,positive_side,judge_a,judge_b
+p001,real,A,A,A
+p002,real,A,A,B
+p003,real,A,A,A
+p004,real,B,B,B
+p005,real,B,B,A
+p006,real,B,B,B
+p007,real,B,B,B
+p008,real,B,A,A
+p009,real,B,A,B
+p010,real,B,A,A
+n001,null,A,A,B
+n002,null,A,B,A
+n003,null,B,B,A
+n004,null,A,B,A
+n005,null,B,B,A
+n006,null,A,B,A

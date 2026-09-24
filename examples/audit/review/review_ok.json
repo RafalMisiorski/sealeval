@@ -1,0 +1,61 @@
+{
+  "measurement": "review",
+  "verdict_restated": "Sealed NOT_SHOWN: test AUC 0.5682 [0.4262, 0.7199], permutation p 0.2886, 19 events in test against the required 30.",
+  "decides": [
+    {
+      "claim": "Under the frozen R6 the model is NOT_SHOWN: AUC 0.5682 is below 0.70 and p 0.2886 is above 0.01.",
+      "evidence": "RESULT.md"
+    },
+    {
+      "claim": "The decision link fires: capture tests only.",
+      "evidence": "PREREG.md"
+    }
+  ],
+  "does_not_decide": [
+    {
+      "claim": "That the signals carry no information in general.",
+      "why": "19 events is an underpowered null, not a demonstrated absence."
+    },
+    {
+      "claim": "That the heuristic at 0.6182 is usable.",
+      "why": "It is a descriptive readout on the same underpowered cohort."
+    }
+  ],
+  "moves": [
+    {
+      "rank": 1,
+      "title": "Record the verdict and close the question",
+      "cost": "2 hours",
+      "decides": "the durable record",
+      "needs_prereg": false,
+      "owner": "team",
+      "blocked_by": ""
+    },
+    {
+      "rank": 2,
+      "title": "Registry-label feasibility probe",
+      "cost": "1 day",
+      "decides": "whether authoritative labels are reachable at zero cost",
+      "needs_prereg": false,
+      "owner": "team",
+      "blocked_by": "owner decision 1"
+    }
+  ],
+  "operator_decisions": [
+    {
+      "question": "Close the question permanently, or authorize the free label probe first?",
+      "options": [
+        "close",
+        "probe first"
+      ],
+      "default_if_silent": "probe first",
+      "why_operator": "spending another cycle on the same question is a priority call",
+      "default_move_rank": 2
+    }
+  ],
+  "guards": {
+    "rigor_inversion": "the sealed NOT_SHOWN stands; the heuristic is inadmissible for any KEEP",
+    "platform_absorption": "no build proposed; a one-day probe gated on an owner decision"
+  },
+  "confidence": 0.85
+}
