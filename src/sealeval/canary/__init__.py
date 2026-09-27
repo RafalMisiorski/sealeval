@@ -173,7 +173,7 @@ def select_sites(root: Path, files: list, archetypes: tuple, n: int, seed: int, 
     rng = random.Random(seed)
     pool = []
     for rel in files:
-        src = (root / rel).read_text(encoding="utf-8")
+        src = (root / rel).open(encoding="utf-8", newline="").read()   # keep the file's own line endings end to end
         if "\t" in src:
             continue
         for c in catalog.find_candidates(src, archetypes, version=version):
@@ -248,14 +248,14 @@ def plant(repo: Path, n: int = 5, archetypes: tuple = PUBLISHED_ARCHETYPES, seed
             src = s["mutated_src"]
             noised, _ = noise_edits(src, rng.randint(*noise), rng, exclude_lines=(s["line"],))
             content = noised if neutral_check(src, noised) else src
-            (root / s["file"]).write_text(content, encoding="utf-8", newline="\n")
+            (root / s["file"]).write_text(content, encoding="utf-8", newline="")
             changed.append(s["file"])
         carriers = [f for f in files if f not in changed]
         for rel in rng.sample(carriers, min(2, len(carriers))):        # carrier files: rewordings only, so no diff is a one-line tell
             src = (root / rel).open(encoding="utf-8", newline="").read()
             noised, lines = noise_edits(src, rng.randint(1, 3), rng)
             if lines and neutral_check(src, noised):
-                (root / rel).write_text(noised, encoding="utf-8", newline="\n")
+                (root / rel).write_text(noised, encoding="utf-8", newline="")
                 changed.append(rel)
         (root / ".sealeval").mkdir(exist_ok=True)
         (root / ".sealeval" / "key.sealed").write_text(json.dumps({**seal, "run_id": run_id, "base": base}, indent=2), encoding="utf-8")
