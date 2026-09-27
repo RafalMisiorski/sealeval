@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "sealeval"
-version = "0.3.0"
+version = "0.4.0"
 description = "Make an evaluation number survive a skeptic: sealed pre-registration, cross-vendor blind panels with hidden controls, a leakage probe, null controls, capture-recapture, an out-of-time model gate and a bounded post-seal reviewer. Zero dependencies."
 readme = "README.md"
 requires-python = ">=3.10"
