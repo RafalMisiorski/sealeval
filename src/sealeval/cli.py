@@ -143,6 +143,9 @@ def main(argv: Optional[list] = None) -> int:
     if argv and argv[0] == "audit":
         from sealeval.audit.cli import main as audit_main
         return audit_main(argv[1:])
+    if argv and argv[0] == "canary":
+        from sealeval.canary.cli import main as canary_main
+        return canary_main(argv[1:])
     ap = argparse.ArgumentParser(
         prog="sealeval",
         description="Check whether an evaluation number actually supports what you want to claim.")
@@ -156,6 +159,7 @@ def main(argv: Optional[list] = None) -> int:
     c.add_argument("--families", metavar="j:vendor,...", help="judge -> vendor, to check cross-family")
     sub.add_parser("demo", help="the 30-second offline tour")
     sub.add_parser("audit", help="leak / controls / pairs / recapture / temporal / review on CSVs you already have")
+    sub.add_parser("canary", help="plant known defects in your repo with a sealed key; score what your reviewer caught")
 
     args = ap.parse_args(argv)
     if args.cmd == "demo":

@@ -139,6 +139,24 @@ For a non-self-preferring panel, call `judge_claims` once per model and require 
   goalpost-move the seal exists to prevent. Raw "found more files" is
   exactly the metric this design exists to debunk (more flags usually means lower precision).
 
+## `sealeval canary` — plant known defects in your own repo, seal the key, see what your reviewer caught
+
+A canary is a planted bug with a sealed answer key. Five of them on a throwaway branch tell you, about whatever reviews
+your code (a bot, an agent, a CLI, a person): whether it said anything at all (a reviewer whose quota ran out returns
+nothing, silently), which planted defects it matched, and how much it flagged that was not planted.
+
+```
+sealeval canary plant --repo . --n 5            # branch canary/<run>, key under ~/.sealeval/canary/<run>/key.json
+# push the branch, open a PR, let the reviewer run
+sealeval canary score --run <run> --gh-pr owner/repo#123     # or --findings findings.json
+```
+
+The key never enters the branch; the branch carries only `.sealeval/key.sealed` (sha-256 over salt + canonical key), so a
+score can be checked against a key that was fixed before anyone reviewed. Planted sites come from the mutation catalog
+(the same operators as the sealed review-arena run); every planted file still compiles; comment and docstring rewordings
+on the planted and two carrier files keep the diff from being a one-line tell. Scoring is deterministic: a site counts as
+found when a finding sits on its file within two lines. `sealeval canary list` shows runs and scores.
+
 ## `sealeval audit` — the five questions a skeptic asks before your number counts
 
 `sealeval.measure` makes a panel verdict an interval with a calibration proof. `sealeval.audit`
