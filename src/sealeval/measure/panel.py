@@ -11,7 +11,8 @@ standard in order:
   2. INTER-JUDGE kappa -- chance-corrected agreement; low agreement is reported as a
      weak-conclusion flag, not hidden.
   3. Panel consensus (majority; ties = NO_CONSENSUS and are excluded from the rate).
-  4. tool-vs-panel accuracy with a BOOTSTRAP CI -- the honest replacement for "8/8".
+  4. tool-vs-panel accuracy with a WILSON CI -- the honest replacement for "8/8" (a percentile
+     bootstrap degenerates to [1, 1] at a perfect score).
   5. CROSS-FAMILY flag -- whether the panel spans >=2 model families (same-family
      panels share taste bias; flagged, not silently accepted).
 

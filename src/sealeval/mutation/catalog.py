@@ -64,13 +64,18 @@ def replace_span(src: str, node: ast.AST, new_text: str) -> str:
     """Replace ``node``'s single-line source span with ``new_text``.
 
     Only valid for nodes where ``lineno == end_lineno`` (guaranteed by callers).
-    Column offsets index into the line's character string (exact for ASCII source;
-    the seeder's compile-guard catches any rare multibyte edge case).
+    ``col_offset`` / ``end_col_offset`` are UTF-8 BYTE offsets (Python ``ast`` contract), so the
+    line is sliced as bytes. Slicing the decoded string instead mis-cuts any line with a multibyte
+    character before the node (``s = "zażółć"; y = a + b`` became ``y = a + a - b``) -- and that
+    mis-cut often still parses, so the compile-guard cannot be relied on to catch it.
     """
     lines = src.splitlines(keepends=True)
     i = node.lineno - 1  # type: ignore[attr-defined]
-    line = lines[i]
-    lines[i] = line[: node.col_offset] + new_text + line[node.end_col_offset :]  # type: ignore[attr-defined]
+    raw = lines[i].encode("utf-8")
+    raw = (raw[: node.col_offset]  # type: ignore[attr-defined]
+           + new_text.encode("utf-8")
+           + raw[node.end_col_offset :])  # type: ignore[attr-defined]
+    lines[i] = raw.decode("utf-8")
     return "".join(lines)
 
 
@@ -203,6 +208,19 @@ def _paren(seg: str, node: ast.AST, *, also=()) -> str:
     return f"({seg})" if isinstance(node, _LOOSE + tuple(also)) else seg
 
 
+def _range_is_equivalent(args: list, stop_i: int) -> bool:
+    """True when every range argument is an int literal and narrowing the stop leaves the SAME
+    sequence (``range(0, 10, 2)`` == ``range(0, 9, 2)``): an equivalent mutant, not a bug."""
+    if not all(isinstance(a, ast.Constant) and type(a.value) is int for a in args):
+        return False
+    vals = [a.value for a in args]
+    if len(vals) == 3 and vals[2] == 0:
+        return False  # range(..., 0) raises either way; leave it to the compile-guard's caller
+    narrowed = list(vals)
+    narrowed[stop_i] -= 1
+    return list(range(*vals)) == list(range(*narrowed))
+
+
 def _off_by_one_v2(tree: ast.AST, src: str) -> list[Candidate]:
     out: list[Candidate] = []
     for node in ast.walk(tree):
@@ -215,9 +233,15 @@ def _off_by_one_v2(tree: ast.AST, src: str) -> list[Candidate]:
         segs = [source_segment(src, a) for a in node.args]
         if any(s is None for s in segs):
             continue
-        last = node.args[-1]
+        # Narrow the STOP bound, never the step: range(stop) -> arg0; range(start, stop[, step]) -> arg1.
+        # (v2 used `segs[-1]`, which on a 3-arg range mutated the STEP -- `range(0, 10, 2 - 1)` -- and
+        # recorded it as "narrowed range upper bound by 1". v1 had the same bug and was fixed first.)
+        stop_i = 0 if len(segs) == 1 else 1
+        if _range_is_equivalent(node.args, stop_i):
+            continue  # behaviour-identical -> must never enter a sealed key
+        stop = node.args[stop_i]
         # `a + b - 1` == `(a + b) - 1`, so only genuinely-looser operands get parens
-        segs[-1] = _paren(segs[-1], last) + " - 1"
+        segs[stop_i] = _paren(segs[stop_i], stop) + " - 1"
         out.append(Candidate("off_by_one", node, "range(" + ", ".join(segs) + ")",
                              "narrowed range upper bound by 1"))
     return out
@@ -312,6 +336,10 @@ ARCHETYPES_V2: dict[str, ArchetypeFn] = {
 
 # version -> registry. v1 is frozen for reproducing existing sealed runs; v2 is the default
 # for NEW runs because v1 is tell-spottable (see the v2 note above).
+# Correctness fixes are the one exception to "frozen": v1 and v2 both got the stop-not-step fix for
+# 3-arg range (v2 on 2026-09-29, plus an equivalent-mutant filter for all-literal ranges), and every
+# replace_span now slices bytes. A sealed key still verifies (the seal is over the recorded key, not a
+# regeneration), but regenerating an OLD corpus that hit a 3-arg range or a multibyte line will differ.
 ARCHETYPE_SETS: dict[str, dict[str, ArchetypeFn]] = {"v1": ARCHETYPES, "v2": ARCHETYPES_V2}
 DEFAULT_ARCHETYPE_VERSION = "v2"
 

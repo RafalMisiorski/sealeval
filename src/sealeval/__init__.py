@@ -40,7 +40,7 @@ from sealeval.sealing.prereg import corpus_manifest
 from sealeval.sealing.prereg import freeze as prereg_freeze
 from sealeval.sealing.prereg import verify as prereg_verify
 
-__version__ = "0.3.0"
+__version__ = "0.4.0"
 
 __all__ = [
     "audit", "judge", "mutation", "sealing",
