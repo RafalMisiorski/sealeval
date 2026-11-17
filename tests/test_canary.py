@@ -5,8 +5,20 @@ import json
 import subprocess
 from pathlib import Path
 
+import pytest
+
 from sealeval.canary import load_findings, plant, score
 from sealeval.sealing.keyseal import verify_seal
+
+
+@pytest.fixture(autouse=True)
+def _git_identity(monkeypatch):
+    """plant() commits with the caller's git identity. A CI runner has none, so the tests bring their own
+    instead of depending on the machine's global git config."""
+    for key, value in (("GIT_AUTHOR_NAME", "canary-test"), ("GIT_AUTHOR_EMAIL", "canary-test@example.invalid"),
+                       ("GIT_COMMITTER_NAME", "canary-test"), ("GIT_COMMITTER_EMAIL", "canary-test@example.invalid")):
+        monkeypatch.setenv(key, value)
+
 
 SRC = (
     "def total(items, extra=None):\n"
