@@ -231,7 +231,13 @@ def seed_corpus(
         dst_path.parent.mkdir(parents=True, exist_ok=True)
         try:
             content = src_path.read_text(encoding="utf-8")
-        except (OSError, UnicodeDecodeError):
+        except UnicodeDecodeError:
+            # Not seedable, but it is part of the corpus: copy it byte-for-byte so the corpus keeps
+            # every file of the source (a missing file would itself be a tell about the seeding).
+            logger.warning("not UTF-8, copied verbatim without seeding: %s", src_path)
+            shutil.copy2(src_path, dst_path)
+            continue
+        except OSError:
             logger.warning("skip unreadable file: %s", src_path)
             continue
 

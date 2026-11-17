@@ -56,7 +56,7 @@ It is four small, composable primitives:
 | primitive | what it does |
 |---|---|
 | `sealeval.measure` **(start here, domain-agnostic)** | works on labels from ANY judged task: a **Round 0** pilot that validates the apparatus before you seal (controls discriminate? metric has headroom? enough runs parsed?), **cross-family** panels, **Wilson CI**, **Cohen/Fleiss kappa**, a **metric-discrimination gate**, and `match_findings` for confirmed-not-flagged scoring. See [`measure/README.md`](src/sealeval/measure/README.md). |
-| `sealeval.mutation` *(optional, code-specific)* | inject **sealed AST bugs** into clean source (off-by-one, inverted-condition, wrong-operator, null-deref, swallowed-exception). Single-line edits keep every other line number byte-stable, so the injected diff is exactly one line and the key's line numbers are exact. Deterministic. |
+| `sealeval.mutation` *(optional, code-specific)* | inject **sealed AST bugs** into clean source (off-by-one, inverted-condition, wrong-operator, null-deref, swallowed-exception). Archetype sets are versioned: `v2` (default) writes idiomatic mutants with no parenthesis tell, `v1` is kept to reproduce old runs. Single-line edits keep every other line number byte-stable, so the injected diff is exactly one line and the key's line numbers are exact. Deterministic. |
 | `sealeval.sealing` | a **binding commitment**: `sha256(salt‖key)` you commit *before* any system runs (the commit timestamp proves the key was fixed first), revealed only after — plus a self-hashing pre-registration of your whole protocol that `verify()` re-checks for drift. |
 | `sealeval.judge` | **refute-by-default** adjudication: each claim is judged in isolation, provenance stripped, against a windowed code excerpt; verdicts are `GENUINE_BUG` / `REAL_NOT_BUG` / `REFUTED`, defaulting to REFUTED on any garbage. The LLM call is a `judge_fn` you supply. |
 
@@ -68,7 +68,7 @@ Not on PyPI yet — install from source:
 git clone <this repo> && cd sealeval
 pip install -e ".[test]"    # zero RUNTIME deps; [test] adds pytest only
 sealeval demo               # the 30-second tour
-python -m pytest            # 60 tests
+python -m pytest            # full suite, offline, a few seconds
 ```
 
 ## The pipeline
@@ -201,11 +201,17 @@ anything outside that directory. The internal runs these came from are not shipp
 
 ## Benchmark runs in this repo
 
-## A public run you can audit — `benchmark/run1`
-whole point. Every judge reply is in `benchmark/run1/transcripts/`; the metric is a *floor* (a
-[`benchmark/run1/RESULTS.md`](benchmark/run1/RESULTS.md) and
-[`PROTOCOL.md`](benchmark/run1/PROTOCOL.md).
-pre-registered, either way — see [`benchmark/run2/RESULTS.md`](benchmark/run2/RESULTS.md).
+- **`benchmark/run1`** — three code reviewers on one sealed corpus (N=24 injected defects), judged
+  blind and refute-by-default; every judge reply is in `benchmark/run1/transcripts/`. The
+  pre-registered prior H1 was falsified and published as such. See
+  [`RESULTS.md`](benchmark/run1/RESULTS.md) and [`PROTOCOL.md`](benchmark/run1/PROTOCOL.md).
+- **`benchmark/run2`** — does a two-model union buy coverage? Union recall lift over the best solo
+  arm = 0.000, so the sealed decision rule fired KILL, pre-registered, either way — see
+  [`benchmark/run2/RESULTS.md`](benchmark/run2/RESULTS.md).
+
+Both runs pre-registered a line tolerance of 1 and count precision over ALL of a system's claims;
+`measure.match_findings` defaults to `line_tolerance=2` and reports precision over confirmed claims.
+Quote which one you use.
 
 MIT licensed. Extracted from a private pre-registered benchmark whose own verdict was a KILL;
 that write-up is not shipped here, so treat this line as provenance, not evidence. The

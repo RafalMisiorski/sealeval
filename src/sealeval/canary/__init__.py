@@ -278,12 +278,28 @@ def plant(repo: Path, n: int = 5, archetypes: tuple = PUBLISHED_ARCHETYPES, seed
 
 
 # ---------------------------------------------------------------- scoring
+def _norm_path(p) -> str:
+    """Forward slashes, leading ``./`` removed as a PREFIX. Not ``lstrip("./")``: that strips a character
+    set and turns ``.github/ci.py`` into ``github/ci.py`` and ``../up.py`` into ``up.py``."""
+    s = str(p).replace("\\", "/")
+    while s.startswith("./"):
+        s = s[2:]
+    return s
+
+
+def same_file(a: str, b: str) -> bool:
+    """Same file when the normalised paths are equal, or one is the other plus a leading directory
+    prefix (``repo/pkg/a.py`` vs ``pkg/a.py``). A bare suffix is not enough: ``src/data.py`` is not ``a.py``."""
+    a, b = _norm_path(a), _norm_path(b)
+    return a == b or a.endswith("/" + b) or b.endswith("/" + a)
+
+
 def load_findings(path: Path) -> list:
     data = json.loads(Path(path).read_text(encoding="utf-8"))
     out = []
     for o in data if isinstance(data, list) else data.get("findings", []):
         try:
-            out.append({"file": str(o.get("file", "")).replace("\\", "/").lstrip("./"), "line": int(o.get("line")), "claim": str(o.get("claim", ""))[:300]})
+            out.append({"file": _norm_path(o.get("file", "")), "line": int(o.get("line")), "claim": str(o.get("claim", ""))[:300]})
         except (TypeError, ValueError):
             continue
     return out
@@ -313,7 +329,7 @@ def score(key: list, seal: dict, findings: list, tolerance: int = LINE_TOLERANCE
     matched, hits = set(), {}
     for i, k in enumerate(key):
         for f in findings:
-            if f["file"].endswith(k["file"]) or k["file"].endswith(f["file"]):
+            if same_file(f["file"], k["file"]):
                 if abs(int(f["line"]) - int(k["line"])) <= tolerance:
                     matched.add(i)
                     hits[i] = f

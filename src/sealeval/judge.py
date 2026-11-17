@@ -87,6 +87,10 @@ class JudgeReport:
     refuted: int
     errored: int
     verdicts: list = field(default_factory=list)
+    # Replies that did not parse to a known verdict. They still COUNT as REFUTED (refute-by-default),
+    # but are reported separately: a judge that silently switched to prose would otherwise just look
+    # strict. Gate on it like Round 0's parse rate.
+    unparsed: int = 0
 
     @property
     def precision_genuine_bug(self) -> Optional[float]:
@@ -101,6 +105,7 @@ class JudgeReport:
             "real_not_bug": self.real_not_bug,
             "refuted": self.refuted,
             "errored": self.errored,
+            "unparsed": self.unparsed,
             "precision_genuine_bug": self.precision_genuine_bug,
             "verdicts": [v.to_dict() for v in self.verdicts],
         }
@@ -145,6 +150,18 @@ def _resolve_file(file: str, root: Path) -> Optional[Path]:
     return p if p.exists() else None
 
 
+def _inside(path: Path, root: Path) -> bool:
+    """True iff ``path`` resolves to a location inside ``root`` (follows ``..``, absolute paths and
+    symlinks via ``resolve``). Without this a DIRECTORY scope let a claim such as
+    ``../.secret/key.json`` put any readable file -- including the sealed answer key -- into the
+    judge's prompt."""
+    try:
+        path.resolve().relative_to(Path(root).resolve())
+        return True
+    except ValueError:
+        return False
+
+
 def _excerpt(path: Path, line: Optional[int], *, window: int = 60, max_full: int = 220) -> str:
     """Return numbered source. Whole file if small; otherwise a window around ``line``."""
     try:
@@ -171,6 +188,12 @@ def _excerpt(path: Path, line: Optional[int], *, window: int = 60, max_full: int
 
 def _parse_verdict(text: str) -> tuple[str, float, str]:
     """Parse the judge's JSON. Defaults to REFUTED (skeptical) on any garbage."""
+    verdict, conf, mech, _ = _parse_verdict_detail(text)
+    return verdict, conf, mech
+
+
+def _parse_verdict_detail(text: str) -> tuple[str, float, str, bool]:
+    """Like ``_parse_verdict`` plus ``parsed``: False when the reply carried no known verdict."""
     t = (text or "").strip()
     if t.startswith("```"):
         t = t.split("```", 2)[1] if "```" in t[3:] else t[3:]
@@ -187,15 +210,18 @@ def _parse_verdict(text: str) -> tuple[str, float, str]:
                 data = json.loads(match.group(0))
             except Exception:
                 data = {}
+    if not isinstance(data, dict):
+        data = {}
     verdict = str(data.get("verdict", "")).upper().strip()
-    if verdict not in VERDICTS:
+    parsed = verdict in VERDICTS
+    if not parsed:
         verdict = "REFUTED"
     try:
         conf = float(data.get("confidence", 0.0))
     except (TypeError, ValueError):
         conf = 0.0
     conf = max(0.0, min(1.0, conf))
-    return verdict, conf, str(data.get("mechanism", ""))[:400]
+    return verdict, conf, str(data.get("mechanism", ""))[:400], parsed
 
 
 def _strip_provenance(claim: dict) -> dict:
@@ -240,6 +266,7 @@ def judge_claims(
     verdicts: list[JudgeVerdict] = []
     counts = {"GENUINE_BUG": 0, "REAL_NOT_BUG": 0, "REFUTED": 0}
     errored = 0
+    unparsed = 0
 
     for raw in claims:
         claim = _strip_provenance(dict(raw))
@@ -254,14 +281,17 @@ def judge_claims(
             counts["REFUTED"] += 1
             verdicts.append(JudgeVerdict(cid, "REFUTED", 0.0, "", file=file, error="file not found"))
             continue
-        if allowed is not None and str(path.resolve()) not in allowed:
+        out_of_scope = (str(path.resolve()) not in allowed) if allowed is not None else not _inside(path, root)
+        if out_of_scope:
+            # Same accounting as a missing file: the claim points outside the reviewed corpus, which is
+            # the system's error, and the file is never shown to the judge.
             counts["REFUTED"] += 1
             verdicts.append(JudgeVerdict(cid, "REFUTED", 0.0, "", file=file, error="file not in scope"))
             continue
         excerpt = _excerpt(path, claim.get("line"))
         try:
             text = judge_fn(JUDGE_SYSTEM, _claim_user_msg(claim, excerpt), model)
-            verdict, conf, mech = _parse_verdict(text)
+            verdict, conf, mech, parsed = _parse_verdict_detail(text)
         except Exception as exc:  # noqa: BLE001 — one bad claim must not abort the run
             errored += 1
             verdicts.append(
@@ -269,7 +299,9 @@ def judge_claims(
             )
             continue
         counts[verdict] += 1
-        verdicts.append(JudgeVerdict(cid, verdict, conf, mech, file=file))
+        unparsed += int(not parsed)
+        verdicts.append(JudgeVerdict(cid, verdict, conf, mech, file=file,
+                                     error=None if parsed else "unparsed reply (counted as REFUTED)"))
 
     return JudgeReport(
         judge_model=model,
@@ -278,6 +310,7 @@ def judge_claims(
         real_not_bug=counts["REAL_NOT_BUG"],
         refuted=counts["REFUTED"],
         errored=errored,
+        unparsed=unparsed,
         verdicts=verdicts,
     )
 
@@ -305,6 +338,7 @@ def append_calibration(
         "scope_path": str(scope_path),
         "claims_judged": report.claims_judged,
         "errored": report.errored,
+        "unparsed": report.unparsed,
         "genuine_bug": report.genuine_bug,
         "real_not_bug": report.real_not_bug,
         "refuted": report.refuted,
